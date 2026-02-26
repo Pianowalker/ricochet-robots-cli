@@ -1,0 +1,65 @@
+from models import Robot
+
+
+class Game:
+    def __init__(self, height, width):
+        self.height = height
+        self.width = width
+        self.walls = set()
+        self.robots = {}
+
+    def add_robot(self, color, position):
+        self.robots[color] = Robot(color, position)
+
+    def add_wall(self, cell1, cell2):
+        # Validar que sean contiguas ortogonalmente
+        r1, c1 = cell1
+        r2, c2 = cell2
+
+        if not (0 <= r1 < self.height and 0 <= c1 < self.width):
+            raise ValueError("cell1 fuera del tablero")
+
+        if not (0 <= r2 < self.height and 0 <= c2 < self.width):
+            raise ValueError("cell2 fuera del tablero")
+
+        if abs(r1 - r2) + abs(c1 - c2) != 1:
+            raise ValueError("Las celdas no son contiguas")
+
+        self.walls.add(frozenset({cell1, cell2}))
+
+    def move(self, color, direction):
+        robot = self.robots[color]
+        r, c = robot.position
+
+        directions = {
+            "right": (0, 1),
+            "left":  (0, -1),
+            "up":    (-1, 0),
+            "down":  (1, 0)
+        }
+
+        dr, dc = directions[direction]
+
+        while True:
+            nr = r + dr
+            nc = c + dc
+
+            # 1) borde
+            if not (0 <= nr < self.height and 0 <= nc < self.width):
+                break
+
+            # 2) pared
+            if frozenset({(r, c), (nr, nc)}) in self.walls:
+                break
+
+            # 3) otro robot
+            if any(other.position == (nr, nc)
+                   for other in self.robots.values()
+                   if other.color != color):
+                break
+
+            # avanzar
+            r, c = nr, nc
+
+        robot.position = (r, c)
+        return robot.position
