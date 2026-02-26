@@ -31,9 +31,24 @@ def print_board(game):
 
             # contenido celda
             cell = "."
+
+            # ¿Hay robot?
             for robot in game.robots.values():
                 if robot.position == (r, c):
                     cell = robot.color
+
+            # ¿Hay target?
+            for target in game.targets:
+                if target.position == (r, c):
+                    if target == game.active_target:
+                        # activo → minúscula
+                        if target.color is None:
+                            cell = "*"
+                        else:
+                            cell = target.color.lower()
+                    else:
+                        # inactivo → punto pequeño visual
+                        cell = "·"
 
             middle_line += f" {cell} "
 
@@ -69,6 +84,14 @@ def main():
     game.add_wall((2, 2), (2, 3))  # bloquea derecha inmediata
     game.add_wall((4, 2), (5, 2))  # bloquea una casilla antes de tocar el suelo si baja
     game.add_wall((4, 4), (4, 5))
+
+    game.add_target("R", "planet", (4, 4))
+    game.add_target("B", "star", (1, 5))
+    game.add_target(None, "wild", (0, 3))
+
+    game.activate_target(1)  # activa el primero
+
+
     print("Controles: right, left, up, down")
     print("Escribí 'q' para salir")
 
@@ -91,8 +114,11 @@ def main():
 
             direction = direction_map[direction_letter]
 
-            new_pos = game.move(robot_letter, direction)
+            new_pos, won = game.move(robot_letter, direction)
             print(f"{robot_letter} -> {new_pos}")
+
+            if won:
+                print("🎉 ¡Objetivo alcanzado!")
 
         except ValueError:
             print("Formato inválido. Usar: <ROBOT> <r/l/u/d>")

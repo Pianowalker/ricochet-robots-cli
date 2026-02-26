@@ -1,4 +1,4 @@
-from models import Robot
+from models import Robot, Target
 
 
 class Game:
@@ -7,6 +7,8 @@ class Game:
         self.width = width
         self.walls = set()
         self.robots = {}
+        self.targets = []
+        self.active_target = None
 
     def add_robot(self, color, position):
         self.robots[color] = Robot(color, position)
@@ -26,6 +28,12 @@ class Game:
             raise ValueError("Las celdas no son contiguas")
 
         self.walls.add(frozenset({cell1, cell2}))
+
+    def add_target(self, color, symbol, position):
+        self.targets.append(Target(color, symbol, position))
+
+    def activate_target(self, index):
+        self.active_target = self.targets[index]
 
     def move(self, color, direction):
         robot = self.robots[color]
@@ -62,4 +70,14 @@ class Game:
             r, c = nr, nc
 
         robot.position = (r, c)
-        return robot.position
+
+        won = False
+
+        if self.active_target is not None:
+            if robot.position == self.active_target.position:
+                if (self.active_target.color is None or
+                    robot.color == self.active_target.color):
+                    won = True
+
+        return robot.position, won
+            
