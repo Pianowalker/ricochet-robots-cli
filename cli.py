@@ -1,6 +1,6 @@
 from game import Game
 from sessions import SinglePlayerSession
-from maps import load_quadrant_A
+from maps import create_green_quadrant
 
 
 def print_board(game):
@@ -72,7 +72,10 @@ def print_board(game):
 def main():
 
     game = Game(8,8)
-    load_quadrant_A(game)
+
+    q = create_green_quadrant()
+    game.load_quadrant(q)
+    
     game.place_robots_randomly(["R","B","G","Y"])
 
     max_rounds = len(game.targets)

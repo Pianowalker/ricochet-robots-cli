@@ -11,6 +11,31 @@ class Game:
         self.targets = []
         self.active_target = None
 
+    def load_quadrant(self, quadrant, offset=(0,0)):
+
+        row_offset, col_offset = offset
+
+        # Walls
+        for wall in quadrant.walls:
+            cell1, cell2 = tuple(wall)
+
+            r1, c1 = cell1
+            r2, c2 = cell2
+
+            self.add_wall(
+                (r1 + row_offset, c1 + col_offset),
+                (r2 + row_offset, c2 + col_offset)
+            )
+
+        # Targets
+        for color, symbol, position in quadrant.targets:
+            r, c = position
+            self.add_target(
+                color,
+                symbol,
+                (r + row_offset, c + col_offset)
+            )
+
     def add_robot(self, color, position):
         self.robots[color] = Robot(color, position)
 
