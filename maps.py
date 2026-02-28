@@ -1,4 +1,44 @@
 from quadrant import Quadrant
+from game import Game
+
+def assemble_board(q1, q2, q3, q4):
+
+    # Validación de colores únicos
+    colors = [q1.color, q2.color, q3.color, q4.color]
+    if len(set(colors)) != 4:
+        raise ValueError("Los cuadrantes deben ser de colores distintos.")
+
+    game = Game(16, 16)
+
+    # Offsets
+    game.load_quadrant(q1, offset=(0, 0))
+    game.load_quadrant(q2, offset=(0, 8))
+    game.load_quadrant(q3, offset=(8, 0))
+    game.load_quadrant(q4, offset=(8, 8))
+
+    # Bloque central 2x2
+    center_cells = [(7,7), (7,8), (8,7), (8,8)]
+
+    for cell in center_cells:
+        game.blocked_cells.add(cell)
+
+    # Paredes alrededor del bloque central
+    central_walls = [
+        ((7,6),(7,7)),
+        ((6,7),(7,7)),
+        ((7,8),(7,9)),
+        ((6,8),(7,8)),
+        ((8,6),(8,7)),
+        ((8,7),(9,7)),
+        ((8,8),(8,9)),
+        ((8,8),(9,8)),
+    ]
+
+    for c1, c2 in central_walls:
+        game.add_wall(c1, c2)
+
+    return game
+
 
 def create_green_quadrant():
 
