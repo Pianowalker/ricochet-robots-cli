@@ -2,7 +2,7 @@ from quadrant import Quadrant
 
 def create_green_quadrant():
 
-    q = Quadrant("green")
+    q = Quadrant("green", 1)
 
     # Targets
     q.add_target("Y", "cross",  (1,3))

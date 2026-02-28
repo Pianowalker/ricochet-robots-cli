@@ -71,10 +71,11 @@ def print_board(game):
 
 def main():
 
-    game = Game(8,8)
-
     q = create_green_quadrant()
-    game.load_quadrant(q)
+    q_rot = q.rotate_90()
+
+    game = Game(8,8)
+    game.load_quadrant(q_rot)
     
     game.place_robots_randomly(["R","B","G","Y"])
 
