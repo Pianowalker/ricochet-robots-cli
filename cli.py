@@ -1,5 +1,6 @@
 from game import Game
 from sessions import SinglePlayerSession
+from maps import load_quadrant_A
 
 
 def print_board(game):
@@ -32,12 +33,7 @@ def print_board(game):
 
             cell = "."
 
-            # Robot
-            for robot in game.robots.values():
-                if robot.position == (r, c):
-                    cell = robot.color
-
-            # Target
+            # Primero target
             for target in game.targets:
                 if target.position == (r, c):
                     if target == game.active_target:
@@ -47,6 +43,11 @@ def print_board(game):
                             cell = target.color.lower()
                     else:
                         cell = "·"
+
+            # Después robot (sobrescribe)
+            for robot in game.robots.values():
+                if robot.position == (r, c):
+                    cell = robot.color
 
             middle_line += f" {cell} "
 
@@ -70,17 +71,14 @@ def print_board(game):
 
 def main():
 
-    game = Game(6, 6)
+    game = Game(8, 8)
+    load_quadrant_A(game)
 
     # Robots iniciales
     game.add_robot("R", (2, 2))
     game.add_robot("B", (4, 1))
-
-    # Targets
-    game.add_target("R", "planet", (5, 5))
-    game.add_target("B", "star", (1, 4))
-    game.add_target(None, "wild", (0, 3))
-
+    game.add_robot("Y", (0, 1))
+    game.add_robot("G", (5, 5))
     session = SinglePlayerSession(game, total_rounds=3)
 
     while True:
