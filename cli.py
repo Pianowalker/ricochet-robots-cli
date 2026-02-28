@@ -1,10 +1,11 @@
 from game import Game
+from sessions import SinglePlayerSession
 
 
 def print_board(game):
     print()
 
-    # ---- Números de columnas ----
+    # Encabezado columnas
     header = "    "
     for c in range(game.width):
         header += f" {c}  "
@@ -12,7 +13,7 @@ def print_board(game):
 
     for r in range(game.height):
 
-        # ---- Línea superior de la fila ----
+        # Línea superior
         top_line = "   +"
         for c in range(game.width):
             if r == 0:
@@ -24,35 +25,31 @@ def print_board(game):
                     top_line += "   +"
         print(top_line)
 
-        # ---- Línea con contenido ----
+        # Línea contenido
         middle_line = f"{r:2} |"
 
         for c in range(game.width):
 
-            # contenido celda
             cell = "."
 
-            # ¿Hay robot?
+            # Robot
             for robot in game.robots.values():
                 if robot.position == (r, c):
                     cell = robot.color
 
-            # ¿Hay target?
+            # Target
             for target in game.targets:
                 if target.position == (r, c):
                     if target == game.active_target:
-                        # activo → minúscula
                         if target.color is None:
                             cell = "*"
                         else:
                             cell = target.color.lower()
                     else:
-                        # inactivo → punto pequeño visual
                         cell = "·"
 
             middle_line += f" {cell} "
 
-            # pared vertical
             if c < game.width - 1:
                 if frozenset({(r, c), (r, c+1)}) in game.walls:
                     middle_line += "|"
@@ -63,7 +60,6 @@ def print_board(game):
 
         print(middle_line)
 
-    # ---- Línea inferior final ----
     bottom_line = "   +"
     for _ in range(game.width):
         bottom_line += "---+"
@@ -73,57 +69,74 @@ def print_board(game):
 
 
 def main():
+
     game = Game(6, 6)
 
     # Robots iniciales
     game.add_robot("R", (2, 2))
-    game.add_robot("B", (3, 4))
-    game.add_robot("G", (4, 1))
+    game.add_robot("B", (4, 1))
 
-    # Pared de prueba
-    game.add_wall((2, 2), (2, 3))  # bloquea derecha inmediata
-    game.add_wall((4, 2), (5, 2))  # bloquea una casilla antes de tocar el suelo si baja
-    game.add_wall((4, 4), (4, 5))
-
-    game.add_target("R", "planet", (4, 4))
-    game.add_target("B", "star", (1, 5))
+    # Targets
+    game.add_target("R", "planet", (5, 5))
+    game.add_target("B", "star", (1, 4))
     game.add_target(None, "wild", (0, 3))
 
-    game.activate_target(1)  # activa el primero
-
-
-    print("Controles: right, left, up, down")
-    print("Escribí 'q' para salir")
+    session = SinglePlayerSession(game, total_rounds=3)
 
     while True:
-        print_board(game)
-        command = input("Comando (ej: R r) o 'q': ")
 
-        if command == "q":
+        started = session.start_new_round()
+
+        if not started:
+            print("\nPartida terminada.")
+            print("Score final:", session.score)
             break
 
-        try:
-            robot_letter, direction_letter = command.split()
+        print(f"\n=== Ronda {session.current_round}/{session.total_rounds} ===")
+        print("Score actual:", session.score)
 
-            direction_map = {
-                "r": "right",
-                "l": "left",
-                "u": "up",
-                "d": "down"
-            }
+        print_board(game)
 
-            direction = direction_map[direction_letter]
+        # Declaración
+        while True:
+            try:
+                declared = int(input("¿Cuántas movidas? "))
+                if declared <= 0:
+                    print("Debe ser un número positivo.")
+                    continue
+                session.declare_solution(declared)
+                break
+            except ValueError:
+                print("Ingresá un número entero válido.")
 
-            new_pos, won = game.move(robot_letter, direction)
-            print(f"{robot_letter} -> {new_pos}")
+        # Movimientos
+        while session.round_active:
 
-            if won:
-                print("🎉 ¡Objetivo alcanzado!")
+            print_board(game)
 
-        except ValueError:
-            print("Formato inválido. Usar: <ROBOT> <r/l/u/d>")
-        except KeyError:
-            print("Robot o dirección inválida.")
+            command = input("Movimiento (ej: R r): ")
+
+            try:
+                robot_letter, direction_letter = command.split()
+
+                direction_map = {
+                    "r": "right",
+                    "l": "left",
+                    "u": "up",
+                    "d": "down"
+                }
+
+                direction = direction_map[direction_letter]
+
+                position, won, message = session.move(robot_letter, direction)
+
+                print(message)
+
+            except Exception:
+                print("Comando inválido.")
+
+        print("Fin de ronda.")
+        print("Score actual:", session.score)
 
 
 if __name__ == "__main__":
