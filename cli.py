@@ -72,7 +72,7 @@ def print_board(game):
 def main():
 
     q = create_green_quadrant()
-    q_rot = q.rotate_90()
+    q_rot = q.rotate(2)
 
     game = Game(8,8)
     game.load_quadrant(q_rot)

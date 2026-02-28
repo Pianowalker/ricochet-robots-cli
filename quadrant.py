@@ -44,3 +44,13 @@ class Quadrant:
             new_q.add_target(color, symbol, new_position)
 
         return new_q
+    
+    def rotate(self, times=1):
+
+        times = times % 4  # evitar rotaciones innecesarias
+
+        result = self
+        for _ in range(times):
+            result = result.rotate_90()
+
+        return result
