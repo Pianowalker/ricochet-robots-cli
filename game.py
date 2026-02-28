@@ -1,4 +1,5 @@
 from models import Robot, Target
+import random
 
 
 class Game:
@@ -34,6 +35,31 @@ class Game:
 
     def activate_target(self, index):
         self.active_target = self.targets[index]
+
+    def place_robots_randomly(self, colors):
+
+        occupied = set()
+
+        # No pueden empezar sobre targets
+        target_positions = {t.position for t in self.targets}
+
+        for color in colors:
+
+            while True:
+                r = random.randint(0, self.height - 1)
+                c = random.randint(0, self.width - 1)
+
+                position = (r, c)
+
+                # Condiciones de validez
+                if (
+                    position not in occupied and
+                    position not in target_positions
+                ):
+                    break
+
+            self.add_robot(color, position)
+            occupied.add(position)
 
     def move(self, color, direction):
         robot = self.robots[color]

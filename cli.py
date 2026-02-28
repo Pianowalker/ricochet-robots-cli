@@ -71,15 +71,24 @@ def print_board(game):
 
 def main():
 
-    game = Game(8, 8)
+    game = Game(8,8)
     load_quadrant_A(game)
+    game.place_robots_randomly(["R","B","G","Y"])
 
-    # Robots iniciales
-    game.add_robot("R", (2, 2))
-    game.add_robot("B", (4, 1))
-    game.add_robot("Y", (0, 1))
-    game.add_robot("G", (5, 5))
-    session = SinglePlayerSession(game, total_rounds=3)
+    max_rounds = len(game.targets)
+
+    while True:
+        try:
+            chosen = int(input(f"¿Cuántas rondas? (1–{max_rounds}): "))
+
+            if 1 <= chosen <= max_rounds:
+                break
+            else:
+                print("Número fuera de rango.")
+
+        except ValueError:
+            print("Ingresá un número válido.")
+    session = SinglePlayerSession(game, total_rounds=chosen)
 
     while True:
 
