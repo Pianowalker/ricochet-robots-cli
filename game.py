@@ -10,6 +10,7 @@ class Game:
         self.robots = {}
         self.targets = []
         self.active_target = None
+        self.blocked_cells = set()
 
     def load_quadrant(self, quadrant, offset=(0,0)):
 

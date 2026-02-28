@@ -1,6 +1,6 @@
 from game import Game
 from sessions import SinglePlayerSession
-from maps import create_green_quadrant
+from maps import assemble_board, create_green_quadrant
 
 
 def print_board(game):
@@ -72,10 +72,19 @@ def print_board(game):
 def main():
 
     q = create_green_quadrant()
-    q_rot = q.rotate(2)
 
-    game = Game(8,8)
-    game.load_quadrant(q_rot)
+    q_tl = q.rotate(1)   # top-left  -> hueco va a (7,7)
+    q_tr = q.rotate(2)   # top-right -> hueco va a (7,0) -> + offset (0,8) => (7,8)
+    q_bl = q.rotate(0)   # bottom-left-> hueco va a (0,7) -> + offset (8,0) => (8,7)
+    q_br = q.rotate(3)   # bottom-right-> hueco va a (0,0) -> + offset (8,8) => (8,8)
+
+    q_tr.color = "red"
+    q_bl.color = "blue"
+    q_br.color = "yellow"
+
+    
+
+    game = assemble_board(q_tl, q_tr, q_bl, q_br)
     
     game.place_robots_randomly(["R","B","G","Y"])
 
