@@ -1,9 +1,10 @@
-# Ricochet Robots CLI
+# Ricochet Robots (CLI Version)
 
-Versión inicial en consola del juego Ricochet Robots.
+A fully functional digital implementation of the board game Ricochet Robots,
+featuring:
 
-## Features
-- Movimiento tipo deslizamiento
-- Paredes entre celdas
-- Múltiples robots
-- Visualización ASCII con coordenadas
+- Random board assembly
+- Rotating quadrants
+- Colored bumpers with correct reflection rules
+- Single-player scoring mode
+- Complete CLI interface
