@@ -74,7 +74,64 @@ def print_board(game):
     print()
 
 
+def show_rules():
+    print("\n=== REGLAS ===")
+    print("""
+- Los robots están representados por letras mayúsculas: B, R, Y, G.
+- Los objetivos están representados por letras minúsculas: b, r, y, g.
+- Debes calcular cuantos movimientos necesitas para que el robot cuya letra sea la misma que la del objetivo llegue a la casilla de este último.
+- Una vez declarado esto, ganas un punto si consigues hacer esto en la cantidad de movimientos declarada.
+- Existe también el objetivo comodín (*) que se puede alcanzar con un robot de cualquier color.
+- Los robots se deslizan hasta chocar con pared, robot o borde.
+- Los resortes (/\) reflejan el movimiento.
+- Si el robot es del mismo color que el resorte, no rebota.
+- +1 punto si acertás la cantidad exacta.
+- -1 punto si no.
+    """)
+
+
+def show_controls():
+    print("\n=== CONTROLES ===")
+    print("""
+Formato de movimiento: RL, BU, YD, etc.
+
+Primera letra:
+R = Rojo
+B = Azul
+G = Verde
+Y = Amarillo
+
+Segunda letra:
+L = izquierda
+R = derecha
+U = arriba
+D = abajo
+
+Ejemplo:
+Rl  → mueve el robot rojo hacia la izquierda
+Bd  → mueve el robot azul hacia abajo
+    """)
+
 def main():
+    while True:
+        print("\n=== RICOCHET ROBOTS ===")
+        print("1) Jugar")
+        print("2) Ver reglas")
+        print("3) Ver controles")
+        print("4) Salir")
+
+        option = input("Elegí una opción: ").strip()
+
+        if option == "1":
+            break
+        elif option == "2":
+            show_rules()
+        elif option == "3":
+            show_controls()
+        elif option == "4":
+            return
+        else:
+            print("Opción inválida.")
 
     game = build_random_board()
     game.place_robots_randomly(["R", "B", "G", "Y"])
@@ -125,10 +182,25 @@ def main():
 
             print_board(game)
 
-            command = input("Movimiento (ej: R r): ")
+            command = input("Movimiento (ej: Rl): ")
 
             try:
-                robot_letter, direction_letter = command.split()
+                command = command.strip()
+
+                if len(command) != 2:
+                    print("Formato inválido. Usá por ejemplo: Rl o Bd")
+                    continue
+
+                robot_letter = command[0].upper()
+                direction_letter = command[1].lower()
+
+                if robot_letter not in ["R", "B", "G", "Y"]:
+                    print("Robot inválido.")
+                    continue
+
+                if direction_letter not in ["l", "r", "u", "d"]:
+                    print("Dirección inválida.")
+                    continue
 
                 direction_map = {
                     "r": "right",
