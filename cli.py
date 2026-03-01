@@ -1,6 +1,7 @@
 from game import Game
 from sessions import SinglePlayerSession
-from maps import assemble_board, create_green_quadrant
+from maps import assemble_board
+from maps import create_blue_quadrant_v1
 
 
 def print_board(game):
@@ -44,6 +45,10 @@ def print_board(game):
                     else:
                         cell = "·"
 
+                        # Bumper
+            if (r, c) in game.bumpers:
+                cell = game.bumpers[(r, c)]
+
             # Después robot (sobrescribe)
             for robot in game.robots.values():
                 if robot.position == (r, c):
@@ -71,15 +76,15 @@ def print_board(game):
 
 def main():
 
-    q = create_green_quadrant()
+    q = create_blue_quadrant_v1()
 
     q_tl = q.rotate(1)   # top-left  -> hueco va a (7,7)
     q_tr = q.rotate(2)   # top-right -> hueco va a (7,0) -> + offset (0,8) => (7,8)
     q_bl = q.rotate(0)   # bottom-left-> hueco va a (0,7) -> + offset (8,0) => (8,7)
     q_br = q.rotate(3)   # bottom-right-> hueco va a (0,0) -> + offset (8,8) => (8,8)
 
-    q_tr.color = "red"
-    q_bl.color = "blue"
+    q_tr.color = "green"
+    q_bl.color = "red"
     q_br.color = "yellow"
 
     

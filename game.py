@@ -1,4 +1,4 @@
-from models import Robot, Target
+from models import Bumper, Robot, Target
 import random
 
 
@@ -11,6 +11,7 @@ class Game:
         self.targets = []
         self.active_target = None
         self.blocked_cells = set()
+        self.bumpers = {}
 
     def load_quadrant(self, quadrant, offset=(0,0)):
 
@@ -35,6 +36,38 @@ class Game:
                 color,
                 symbol,
                 (r + row_offset, c + col_offset)
+            )
+                # Border walls
+        for (r, c), side in quadrant.border_walls:
+
+            gr = r + row_offset
+            gc = c + col_offset
+
+            if side == "up":
+                neighbor = (gr - 1, gc)
+            elif side == "down":
+                neighbor = (gr + 1, gc)
+            elif side == "left":
+                neighbor = (gr, gc - 1)
+            elif side == "right":
+                neighbor = (gr, gc + 1)
+
+            # Solo si está dentro del tablero
+            if (0 <= neighbor[0] < self.height and
+                0 <= neighbor[1] < self.width):
+                self.add_wall((gr, gc), neighbor)
+        
+        for bumper in quadrant.bumpers:
+
+            r, c = bumper.position
+
+            gr = r + row_offset
+            gc = c + col_offset
+
+            self.bumpers[(gr, gc)] = Bumper(
+                (gr, gc),
+                bumper.diagonal,
+                bumper.color
             )
 
     def add_robot(self, color, position):
@@ -80,7 +113,9 @@ class Game:
                 # Condiciones de validez
                 if (
                     position not in occupied and
-                    position not in target_positions
+                    position not in target_positions and
+                    position not in self.blocked_cells and
+                    position not in self.bumpers
                 ):
                     break
 

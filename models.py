@@ -9,3 +9,9 @@ class Target:
         self.color = color        # "R", "B", etc o None para comodín
         self.symbol = symbol      # "planet", "moon", etc
         self.position = position
+
+class Bumper:
+    def __init__(self, position, diagonal, color):
+        self.position = position
+        self.diagonal = diagonal   # "/" o "\\"
+        self.color = color         # "R", "G", "B", "Y"
