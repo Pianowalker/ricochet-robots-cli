@@ -25,6 +25,15 @@ class Quadrant:
     def add_target(self, color, symbol, position):
         self.targets.append((color, symbol, position))
 
+    def add_bumper(self, position, diagonal):
+        """
+        diagonal: "/" o "\\"
+        """
+        if diagonal not in {"/", "\\"}:
+            raise ValueError("Diagonal inválida para bumper")
+
+        self.bumpers.append((position, diagonal))
+
     def rotate_90(self):
 
         new_q = Quadrant(

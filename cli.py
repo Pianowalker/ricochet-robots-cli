@@ -45,6 +45,10 @@ def print_board(game):
                     else:
                         cell = "·"
 
+                        # Bumper
+            if (r, c) in game.bumpers:
+                cell = game.bumpers[(r, c)]
+
             # Después robot (sobrescribe)
             for robot in game.robots.values():
                 if robot.position == (r, c):

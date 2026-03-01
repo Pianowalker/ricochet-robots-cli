@@ -11,6 +11,7 @@ class Game:
         self.targets = []
         self.active_target = None
         self.blocked_cells = set()
+        self.bumpers = {}
 
     def load_quadrant(self, quadrant, offset=(0,0)):
 
@@ -55,6 +56,14 @@ class Game:
             if (0 <= neighbor[0] < self.height and
                 0 <= neighbor[1] < self.width):
                 self.add_wall((gr, gc), neighbor)
+        
+                # Bumpers
+        for (r, c), diagonal in quadrant.bumpers:
+
+            gr = r + row_offset
+            gc = c + col_offset
+
+            self.bumpers[(gr, gc)] = diagonal
 
     def add_robot(self, color, position):
         self.robots[color] = Robot(color, position)
@@ -99,7 +108,9 @@ class Game:
                 # Condiciones de validez
                 if (
                     position not in occupied and
-                    position not in target_positions
+                    position not in target_positions and
+                    position not in self.blocked_cells and
+                    position not in self.bumpers
                 ):
                     break
 
