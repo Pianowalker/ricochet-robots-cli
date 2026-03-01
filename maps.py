@@ -180,9 +180,9 @@ def create_yellow_quadrant_v1():
 
     return q
 
-def create_red_quadrant_bumper():
+def create_red_quadrant_v4():
 
-    q = Quadrant("red", "bumper", has_bumpers=True)
+    q = Quadrant("red", 4, has_bumpers=True)
 
     # -----------------
     # TARGETS
@@ -239,7 +239,7 @@ ALL_QUADRANT_BUILDERS = [
     create_green_quadrant_v1,
     create_blue_quadrant_v1,
     create_yellow_quadrant_v1,
-    create_red_quadrant_bumper,
+    create_red_quadrant_v4,
 ]
 
 def build_random_board():

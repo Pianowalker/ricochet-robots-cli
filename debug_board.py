@@ -1,5 +1,5 @@
 from game import Game
-from maps import create_red_quadrant_bumper
+from maps import create_red_quadrant_v4
 
 
 def print_single_quadrant(quadrant):
@@ -81,7 +81,7 @@ def print_board_debug(game):
 
 
 def main():
-    q = create_red_quadrant_bumper()
+    q = create_red_quadrant_v4()
 
     print("\n=== CUADRANTE ORIGINAL ===")
     print_single_quadrant(q)
