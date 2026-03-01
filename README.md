@@ -52,7 +52,6 @@ The board is built by selecting four distinct quadrants at random and applying c
 
 Make sure you have Python 3.10+ installed.
 
-```bash
 python cli.py
 
 You will be prompted to choose the number of rounds.
