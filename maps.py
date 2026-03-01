@@ -189,7 +189,7 @@ def create_red_quadrant_bumper():
 
     q.add_target("B", "cross",  (1,2))
     q.add_target("Y", "planet", (2,6))
-    q.add_target("R", "triangle", (4,4))
+    q.add_target("R", "sun", (4,4))
     q.add_target("G", "moon",   (5,4))
 
     # -----------------
