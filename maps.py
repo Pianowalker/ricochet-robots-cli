@@ -1,3 +1,4 @@
+import random
 from quadrant import Quadrant
 from game import Game
 
@@ -233,3 +234,26 @@ def create_red_quadrant_bumper():
     q.add_wall((0,7),(1,7))
 
     return q
+
+ALL_QUADRANT_BUILDERS = [
+    create_green_quadrant_v1,
+    create_blue_quadrant_v1,
+    create_yellow_quadrant_v1,
+    create_red_quadrant_bumper,
+]
+
+def build_random_board():
+
+    selected_builders = random.sample(ALL_QUADRANT_BUILDERS, 4)
+
+    quadrants = [builder() for builder in selected_builders]
+
+    random.shuffle(quadrants)
+
+    # Asignación correcta
+    q_tl = quadrants[0].rotate(1)  # (7,7)
+    q_tr = quadrants[1].rotate(2)  # (7,0)
+    q_bl = quadrants[2].rotate(0)  # (0,7)
+    q_br = quadrants[3].rotate(3)  # (0,0)
+
+    return assemble_board(q_tl, q_tr, q_bl, q_br)

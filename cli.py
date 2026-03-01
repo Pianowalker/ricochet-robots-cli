@@ -1,12 +1,6 @@
-from game import Game
 from sessions import SinglePlayerSession
-from maps import assemble_board
-from maps import (
-    create_green_quadrant_v1,
-    create_blue_quadrant_v1,
-    create_yellow_quadrant_v1,
-    create_red_quadrant_bumper
-)
+from maps import build_random_board
+
 
 
 
@@ -82,20 +76,8 @@ def print_board(game):
 
 def main():
 
-    q_green = create_green_quadrant_v1()
-    q_blue = create_blue_quadrant_v1()
-    q_yellow = create_yellow_quadrant_v1()
-    q_red = create_red_quadrant_bumper()
-
-    q_tl = q_green.rotate(1)
-    q_tr = q_blue.rotate(2)
-    q_bl = q_yellow.rotate(0)
-    q_br = q_red.rotate(3)
-
-
-    game = assemble_board(q_tl, q_tr, q_bl, q_br)
-    
-    game.place_robots_randomly(["R","B","G","Y"])
+    game = build_random_board()
+    game.place_robots_randomly(["R", "B", "G", "Y"])
 
     max_rounds = len(game.targets)
 
