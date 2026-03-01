@@ -1,6 +1,5 @@
 from game import Game
 from maps import create_red_quadrant_bumper
-from cli import print_board
 
 
 def print_single_quadrant(quadrant):
