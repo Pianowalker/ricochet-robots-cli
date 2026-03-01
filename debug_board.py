@@ -54,7 +54,8 @@ def print_board_debug(game):
 
             # Bumper
             if (r, c) in game.bumpers:
-                cell = game.bumpers[(r, c)]
+                bumper = game.bumpers[(r, c)]
+                cell = bumper.diagonal
 
             # Robot (sobrescribe todo)
             for robot in game.robots.values():

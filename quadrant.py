@@ -1,3 +1,5 @@
+from models import Bumper
+
 class Quadrant:
     def __init__(self, color, variant, size=8, has_bumpers=False):
         self.color = color
@@ -25,14 +27,12 @@ class Quadrant:
     def add_target(self, color, symbol, position):
         self.targets.append((color, symbol, position))
 
-    def add_bumper(self, position, diagonal):
-        """
-        diagonal: "/" o "\\"
-        """
-        if diagonal not in {"/", "\\"}:
-            raise ValueError("Diagonal inválida para bumper")
+    def add_bumper(self, position, diagonal, color):
 
-        self.bumpers.append((position, diagonal))
+        if diagonal not in {"/", "\\"}:
+            raise ValueError("Diagonal inválida")
+
+        self.bumpers.append(Bumper(position, diagonal, color))
 
     def rotate_90(self):
 
@@ -80,14 +80,27 @@ class Quadrant:
 
             new_q.add_border_wall((new_r, new_c), new_side)
 
-                # Rotar bumpers
-        for (r, c), diagonal in self.bumpers:
+        # Rotar bumpers
+        for bumper in self.bumpers:
+
+            r, c = bumper.position
 
             new_r = c
             new_c = size - 1 - r
 
+            if bumper.diagonal == "/":
+                new_diagonal = "\\"
+            else:
+                new_diagonal = "/"
+
+            new_q.add_bumper(
+                (new_r, new_c),
+                new_diagonal,
+                bumper.color
+            )
+
             # Al rotar 90°, las diagonales se invierten
-            if diagonal == "/":
+            if bumper.diagonal == "/":
                 new_diagonal = "\\"
             else:
                 new_diagonal = "/"

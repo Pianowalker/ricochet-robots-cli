@@ -1,4 +1,4 @@
-from models import Robot, Target
+from models import Bumper, Robot, Target
 import random
 
 
@@ -57,13 +57,18 @@ class Game:
                 0 <= neighbor[1] < self.width):
                 self.add_wall((gr, gc), neighbor)
         
-                # Bumpers
-        for (r, c), diagonal in quadrant.bumpers:
+        for bumper in quadrant.bumpers:
+
+            r, c = bumper.position
 
             gr = r + row_offset
             gc = c + col_offset
 
-            self.bumpers[(gr, gc)] = diagonal
+            self.bumpers[(gr, gc)] = Bumper(
+                (gr, gc),
+                bumper.diagonal,
+                bumper.color
+            )
 
     def add_robot(self, color, position):
         self.robots[color] = Robot(color, position)
