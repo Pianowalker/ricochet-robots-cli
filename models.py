@@ -13,5 +13,31 @@ class Target:
 class Bumper:
     def __init__(self, position, diagonal, color):
         self.position = position
-        self.diagonal = diagonal   # "/" o "\\"
-        self.color = color         # "R", "G", "B", "Y"
+        self.diagonal = diagonal
+        self.color = color
+
+    def reflect(self, direction, robot_color):
+
+        # Si el robot es del mismo color → no rebota
+        if robot_color == self.color:
+            return direction
+
+        if self.diagonal == "/":
+            mapping = {
+                "right": "up",
+                "up": "right",
+                "left": "down",
+                "down": "left"
+            }
+        else:  # "\"
+            mapping = {
+                "right": "down",
+                "down": "right",
+                "left": "up",
+                "up": "left"
+            }
+
+        return mapping[direction]
+    
+    def __str__(self):
+        return self.diagonal
