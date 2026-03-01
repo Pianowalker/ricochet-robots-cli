@@ -274,26 +274,37 @@ def create_red_quadrant_v4():
 
     return q
 
-ALL_QUADRANT_BUILDERS = [
+GREEN_QUADRANTS = [
     create_green_quadrant_v1,
     create_green_quadrant_v2,
+]
+
+BLUE_QUADRANTS = [
     create_blue_quadrant_v1,
-    create_yellow_quadrant_v1,
+]
+
+RED_QUADRANTS = [
     create_red_quadrant_v4,
+]
+
+YELLOW_QUADRANTS = [
+    create_yellow_quadrant_v1,
 ]
 
 def build_random_board():
 
-    selected_builders = random.sample(ALL_QUADRANT_BUILDERS, 4)
+    q_green = random.choice(GREEN_QUADRANTS)()
+    q_blue = random.choice(BLUE_QUADRANTS)()
+    q_red = random.choice(RED_QUADRANTS)()
+    q_yellow = random.choice(YELLOW_QUADRANTS)()
 
-    quadrants = [builder() for builder in selected_builders]
+    quadrants = [q_green, q_blue, q_red, q_yellow]
 
     random.shuffle(quadrants)
 
-    # Asignación correcta
-    q_tl = quadrants[0].rotate(1)  # (7,7)
-    q_tr = quadrants[1].rotate(2)  # (7,0)
-    q_bl = quadrants[2].rotate(0)  # (0,7)
-    q_br = quadrants[3].rotate(3)  # (0,0)
+    q_tl = quadrants[0].rotate(1)
+    q_tr = quadrants[1].rotate(2)
+    q_bl = quadrants[2].rotate(0)
+    q_br = quadrants[3].rotate(3)
 
     return assemble_board(q_tl, q_tr, q_bl, q_br)
