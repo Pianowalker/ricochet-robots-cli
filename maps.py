@@ -85,7 +85,7 @@ def create_blue_quadrant_v1():
     # -----------------
 
     q.add_target("B", "sun",    (2,3))
-    q.add_target("G", "cross",  (3,6))
+    q.add_target("G", "cross",  (3,5))
     q.add_target("Y", "moon",   (4,2))
     q.add_target("R", "planet", (5,4))
 

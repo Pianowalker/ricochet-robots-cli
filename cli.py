@@ -1,7 +1,13 @@
 from game import Game
 from sessions import SinglePlayerSession
 from maps import assemble_board
-from maps import create_red_quadrant_bumper
+from maps import (
+    create_green_quadrant_v1,
+    create_blue_quadrant_v1,
+    create_yellow_quadrant_v1,
+    create_red_quadrant_bumper
+)
+
 
 
 def print_board(game):
@@ -76,18 +82,16 @@ def print_board(game):
 
 def main():
 
-    q = create_red_quadrant_bumper()
+    q_green = create_green_quadrant_v1()
+    q_blue = create_blue_quadrant_v1()
+    q_yellow = create_yellow_quadrant_v1()
+    q_red = create_red_quadrant_bumper()
 
-    q_tl = q.rotate(1)   # top-left  -> hueco va a (7,7)
-    q_tr = q.rotate(2)   # top-right -> hueco va a (7,0) -> + offset (0,8) => (7,8)
-    q_bl = q.rotate(0)   # bottom-left-> hueco va a (0,7) -> + offset (8,0) => (8,7)
-    q_br = q.rotate(3)   # bottom-right-> hueco va a (0,0) -> + offset (8,8) => (8,8)
+    q_tl = q_green.rotate(1)
+    q_tr = q_blue.rotate(2)
+    q_bl = q_yellow.rotate(0)
+    q_br = q_red.rotate(3)
 
-    q_tr.color = "green"
-    q_bl.color = "blue"
-    q_br.color = "yellow"
-
-    
 
     game = assemble_board(q_tl, q_tr, q_bl, q_br)
     
