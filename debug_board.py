@@ -1,5 +1,5 @@
 from game import Game
-from maps import create_green_quadrant_v2
+from maps import create_yellow_quadrant_v2
 
 
 def print_single_quadrant(quadrant):
@@ -81,7 +81,7 @@ def print_board_debug(game):
 
 
 def main():
-    q = create_green_quadrant_v2()
+    q = create_yellow_quadrant_v2()
 
     print("\n=== CUADRANTE ORIGINAL ===")
     print_single_quadrant(q)
