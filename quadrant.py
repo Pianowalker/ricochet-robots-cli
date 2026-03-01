@@ -80,6 +80,20 @@ class Quadrant:
 
             new_q.add_border_wall((new_r, new_c), new_side)
 
+                # Rotar bumpers
+        for (r, c), diagonal in self.bumpers:
+
+            new_r = c
+            new_c = size - 1 - r
+
+            # Al rotar 90°, las diagonales se invierten
+            if diagonal == "/":
+                new_diagonal = "\\"
+            else:
+                new_diagonal = "/"
+
+            new_q.add_bumper((new_r, new_c), new_diagonal)
+
         return new_q
     
     def rotate(self, times=1):

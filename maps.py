@@ -178,3 +178,58 @@ def create_yellow_quadrant_v1():
     q.add_wall((0,7),(1,7))
 
     return q
+
+def create_red_quadrant_bumper():
+
+    q = Quadrant("red", "bumper", has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    q.add_target("B", "cross",  (1,2))
+    q.add_target("Y", "planet", (2,6))
+    q.add_target("R", "triangle", (4,4))
+    q.add_target("G", "moon",   (5,4))
+
+    # -----------------
+    # BUMPERS
+    # -----------------
+
+    q.add_bumper((1,3), "/")
+    q.add_bumper((3,1), "/")
+
+    # -----------------
+    # WALLS targets
+    # -----------------
+
+    # Azul
+    q.add_wall((1,2),(0,2))
+    q.add_wall((1,2),(1,3))
+
+    # Amarillo
+    q.add_wall((2,6),(2,5))
+    q.add_wall((2,6),(3,6))
+
+    # Rojo
+    q.add_wall((4,4),(4,5))
+    q.add_wall((4,4),(5,4))
+
+    # Verde
+    q.add_wall((5,4),(5,3))
+
+    # -----------------
+    # Walls extra
+    # -----------------
+
+    q.add_wall((2,0),(3,0))
+    q.add_wall((7,2),(7,3))
+
+    # -----------------
+    # Encastre
+    # -----------------
+
+    q.add_wall((0,6),(0,7))
+    q.add_wall((0,7),(1,7))
+
+    return q
