@@ -1,41 +1,56 @@
-# Ricochet Robots (CLI Version)
+# Ricochet Robots – CLI Edition
 
-A fully functional digital implementation of the board game Ricochet Robots,
-featuring:
+A fully functional digital implementation of the board game **Ricochet Robots**, developed in Python with a modular architecture and command-line interface.
 
-- Random board assembly
-- Rotating quadrants
-- Colored bumpers with correct reflection rules
-- Single-player scoring mode
-- Complete CLI interface
+This project recreates the core mechanics of the original game, including rotating quadrants, random board assembly, colored bumpers with accurate reflection behavior, and a single-player scoring mode.
 
-## Features
+---
 
-- 16x16 board assembled from real game quadrants
-- Correct central blocked zone
+## 🎮 Features
+
+- 16x16 board assembled from 4 official-style quadrants
+- Correct central 2x2 blocked zone
+- Random board generation with valid quadrant rotations
 - Accurate bumper reflection mechanics (color-sensitive)
-- Random board generation
-- Single-player round system
-- Text-based board rendering
+- Support for wildcard (multi-color spiral) targets
+- Single-player round system with scoring
+- Text-based CLI board rendering
+- Debug mode for inspecting quadrants and rotations
 
-## How to Run
+---
 
-```bash
-python cli.py
+## 🧠 Game Mechanics Implemented
 
-**## Architecture Overview**
+- Robots slide in a straight line until hitting:
+  - A wall
+  - Another robot
+  - The board edge
+- Bumpers (`/` and `\`) reflect robots correctly
+- Robots **do not reflect** on bumpers of their own color
+- Targets include colored objectives and a wildcard target
+- Quadrants rotate geometrically correctly (walls, targets, bumpers and borders)
+
+---
+
+## 🏗 Architecture Overview
+
+The project follows a modular and domain-oriented structure:
 
 - `game.py` – Core game engine and movement logic
 - `quadrant.py` – Quadrant model with rotation mechanics
-- `models.py` – Robot, Target and Bumper entities
-- `maps.py` – Quadrant definitions and board assembly
-- `sessions.py` – Single-player session logic
-- `cli.py` – Command-line interface
-- `debug_board.py` – Development debugging tool
+- `models.py` – Domain entities (`Robot`, `Target`, `Bumper`)
+- `maps.py` – Quadrant definitions and random board assembly
+- `sessions.py` – Single-player session logic and scoring
+- `cli.py` – Main command-line interface
+- `debug_board.py` – Development tool for inspecting boards and rotations
 
-**## Future Improvements**
+The board is built by selecting four distinct quadrants at random and applying constrained rotations so that their inner blocked cells align correctly in the center of the 16x16 board.
 
-- Additional official maps
-- Code refactoring of movement logic
-- Unit testing
-- Optional graphical interface
+---
+
+## 🚀 How to Run
+
+Make sure you have Python 3.10+ installed.
+
+```bash
+python cli.py
