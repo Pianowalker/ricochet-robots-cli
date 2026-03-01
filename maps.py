@@ -40,7 +40,7 @@ def assemble_board(q1, q2, q3, q4):
     return game
 
 
-def create_green_quadrant():
+def create_green_quadrant_v1():
 
     q = Quadrant("green", 1)
 
@@ -71,6 +71,109 @@ def create_green_quadrant():
     q.add_wall((7,5),(7,6))
 
     # Hueco central
+    q.add_wall((0,6),(0,7))
+    q.add_wall((0,7),(1,7))
+
+    return q
+
+def create_blue_quadrant_v1():
+
+    q = Quadrant("blue", 1)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    q.add_target("B", "sun",    (2,3))
+    q.add_target("G", "cross",  (3,6))
+    q.add_target("Y", "moon",   (4,2))
+    q.add_target("R", "planet", (5,4))
+
+    # -----------------
+    # WALLS targets
+    # -----------------
+
+    # Azul
+    q.add_wall((2,3),(2,4))
+    q.add_wall((2,3),(3,3))
+
+    # Verde
+    q.add_wall((3,5),(2,5))
+    q.add_wall((3,5),(3,6))
+
+    # Amarillo
+    q.add_wall((4,2),(5,2))
+    q.add_wall((4,1),(4,2))
+
+    # Rojo
+    q.add_wall((4,4),(5,4))
+    q.add_wall((5,3),(5,4))
+
+    # -----------------
+    # Walls extra
+    # -----------------
+
+    q.add_wall((1,0),(2,0))
+    q.add_wall((7,3),(7,4))
+
+    # -----------------
+    # Encastre (0,7)
+    # -----------------
+
+    q.add_wall((0,6),(0,7))
+    q.add_wall((0,7),(1,7))
+
+    return q
+
+def create_yellow_quadrant_v1():
+
+    q = Quadrant("yellow", 1)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    q.add_target(None, "spiral", (0,2))   # comodín
+    q.add_target("B", "moon",    (2,1))
+    q.add_target("G", "planet",  (1,5))
+    q.add_target("R", "cross",   (4,4))
+    q.add_target("Y", "sun",     (6,6))
+
+    # -----------------
+    # WALLS targets
+    # -----------------
+
+    # Comodín
+    q.add_wall((0,2),(0,3))
+    q.add_border_wall((0,2), "up")
+
+    # Azul
+    q.add_wall((2,1),(2,2))
+    q.add_wall((2,1),(3,1))
+
+    # Verde
+    q.add_wall((1,5),(1,4))
+    q.add_wall((1,5),(2,5))
+
+    # Rojo
+    q.add_wall((4,4),(4,5))
+    q.add_wall((4,4),(3,4))
+
+    # Amarillo
+    q.add_wall((6,6),(6,5))
+    q.add_wall((6,6),(5,6))
+
+    # -----------------
+    # Walls extra
+    # -----------------
+
+    q.add_wall((4,0),(5,0))
+    q.add_wall((7,3),(7,4))
+
+    # -----------------
+    # Encastre
+    # -----------------
+
     q.add_wall((0,6),(0,7))
     q.add_wall((0,7),(1,7))
 
