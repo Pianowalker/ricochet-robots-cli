@@ -69,6 +69,8 @@ First letter = Robot color (R, B, G, Y)
 
 Second letter = Direction (r, l, u, d)
 
+
+
 🧪 Debug Mode
 
 For development and verification purposes:
@@ -76,6 +78,8 @@ For development and verification purposes:
 python debug_board.py
 
 This prints quadrants and their rotations to validate geometry and wall placement.
+
+
 
 📌 Current Scope
 
@@ -88,6 +92,8 @@ Multiple official-style quadrants digitalized
 Color-sensitive bumper reflection
 
 CLI-based gameplay
+
+
 
 🔮 Future Improvements
 
@@ -102,6 +108,8 @@ Optional graphical interface
 Game state persistence
 
 Multiplayer mode
+
+
 
 📖 About
 
