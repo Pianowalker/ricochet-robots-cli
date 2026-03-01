@@ -1,7 +1,7 @@
 from game import Game
 from sessions import SinglePlayerSession
 from maps import assemble_board
-from maps import create_blue_quadrant_v1
+from maps import create_red_quadrant_bumper
 
 
 def print_board(game):
@@ -76,7 +76,7 @@ def print_board(game):
 
 def main():
 
-    q = create_blue_quadrant_v1()
+    q = create_red_quadrant_bumper()
 
     q_tl = q.rotate(1)   # top-left  -> hueco va a (7,7)
     q_tr = q.rotate(2)   # top-right -> hueco va a (7,0) -> + offset (0,8) => (7,8)
@@ -84,7 +84,7 @@ def main():
     q_br = q.rotate(3)   # bottom-right-> hueco va a (0,0) -> + offset (8,8) => (8,8)
 
     q_tr.color = "green"
-    q_bl.color = "red"
+    q_bl.color = "blue"
     q_br.color = "yellow"
 
     

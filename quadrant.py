@@ -88,6 +88,7 @@ class Quadrant:
             new_r = c
             new_c = size - 1 - r
 
+            # Rotar diagonal
             if bumper.diagonal == "/":
                 new_diagonal = "\\"
             else:
@@ -98,14 +99,6 @@ class Quadrant:
                 new_diagonal,
                 bumper.color
             )
-
-            # Al rotar 90°, las diagonales se invierten
-            if bumper.diagonal == "/":
-                new_diagonal = "\\"
-            else:
-                new_diagonal = "/"
-
-            new_q.add_bumper((new_r, new_c), new_diagonal)
 
         return new_q
     

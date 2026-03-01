@@ -196,8 +196,8 @@ def create_red_quadrant_bumper():
     # BUMPERS
     # -----------------
 
-    q.add_bumper((1,3), "/")
-    q.add_bumper((3,1), "/")
+    q.add_bumper((1,3), "/", "yellow")
+    q.add_bumper((3,1), "/", "blue")
 
     # -----------------
     # WALLS targets

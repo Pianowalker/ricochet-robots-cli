@@ -156,6 +156,13 @@ class Game:
             # avanzar
             r, c = nr, nc
 
+            # Chequear bumper
+            if (r, c) in self.bumpers:
+                bumper = self.bumpers[(r, c)]
+                direction = bumper.reflect(direction, robot.color)
+
+                dr, dc = directions[direction]
+
         robot.position = (r, c)
 
         won = False
