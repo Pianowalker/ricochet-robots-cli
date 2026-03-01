@@ -54,3 +54,68 @@ Make sure you have Python 3.10+ installed.
 
 ```bash
 python cli.py
+
+You will be prompted to choose the number of rounds.
+During each round:
+
+Declare how many moves you believe are needed.
+
+Enter moves in the format:
+
+R r
+
+Where:
+
+First letter = Robot color (R, B, G, Y)
+
+Second letter = Direction (r, l, u, d)
+
+🧪 Debug Mode
+
+For development and verification purposes:
+
+python debug_board.py
+
+This prints quadrants and their rotations to validate geometry and wall placement.
+
+📌 Current Scope
+
+Core engine complete
+
+Random board generation implemented
+
+Multiple official-style quadrants digitalized
+
+Color-sensitive bumper reflection
+
+CLI-based gameplay
+
+🔮 Future Improvements
+
+Additional official quadrant maps
+
+Refactoring of movement logic for clarity
+
+Unit testing
+
+Optional graphical interface
+
+Game state persistence
+
+Multiplayer mode
+
+📖 About
+
+This project was developed as a structured exercise in:
+
+Object-oriented design
+
+Board game modeling
+
+Geometric transformations
+
+Clean architecture principles
+
+Incremental feature development
+
+Feedback and suggestions are welcome.
