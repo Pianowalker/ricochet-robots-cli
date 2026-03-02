@@ -1,5 +1,5 @@
-from game import Game
-from maps import create_blue_quadrant_v2
+from domain.game import Game
+from domain.maps import create_blue_quadrant_v2
 
 
 def print_single_quadrant(quadrant):

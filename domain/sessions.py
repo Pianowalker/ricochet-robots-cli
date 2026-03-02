@@ -73,9 +73,12 @@ class SinglePlayerSession:
         if self.declared_moves is None:
             return None, False, "Primero declarás la cantidad de movidas"
 
-        self.move_count += 1
+        position, won, illegal = self.game.move(color, direction)
 
-        position, won = self.game.move(color, direction)
+        if illegal:
+            return position, False, "Movimiento ilegal: no se puede terminar en un bumper"
+
+        self.move_count += 1
 
         # Excedió lo declarado
         if self.move_count > self.declared_moves:

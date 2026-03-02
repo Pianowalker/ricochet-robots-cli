@@ -1,5 +1,5 @@
-from sessions import SinglePlayerSession
-from maps import build_random_board
+from domain.maps import build_random_board
+from domain.sessions import SinglePlayerSession
 import os
 
 # Habilitar ANSI en Windows
@@ -123,6 +123,7 @@ def show_rules():
 - Existe también el objetivo comodín (*) que se puede alcanzar con un robot de cualquier color.
 - Los robots se deslizan hasta chocar con pared, robot o borde.
 - Los resortes (/\) reflejan el movimiento.
+- Están prohibidos los movimientos ilegales, como terminar sobre un resorte o intentar mover un robot que no existe.
 - Si el robot es del mismo color que el resorte, no rebota.
 - +1 punto si acertás la cantidad exacta.
 - -1 punto si no.

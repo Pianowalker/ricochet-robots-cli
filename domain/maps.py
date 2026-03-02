@@ -1,6 +1,6 @@
 import random
-from quadrant import Quadrant
-from game import Game
+from .quadrant import Quadrant
+from .game import Game
 
 def assemble_board(q1, q2, q3, q4):
 
@@ -399,7 +399,9 @@ YELLOW_QUADRANTS = [
     create_yellow_quadrant_v2
 ]
 
-def build_random_board():
+def build_random_board(seed=None):
+    if seed is not None:
+        random.seed(seed)
 
     q_green = random.choice(GREEN_QUADRANTS)()
     q_blue = random.choice(BLUE_QUADRANTS)()

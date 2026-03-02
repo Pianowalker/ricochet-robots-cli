@@ -1,4 +1,4 @@
-from models import Bumper, Robot, Target
+from .models import Bumper, Robot, Target
 import random
 
 
@@ -121,6 +121,24 @@ class Game:
 
             self.add_robot(color, position)
             occupied.add(position)
+            
+
+    def _can_step(self, from_cell, to_cell, moving_color):
+
+        r, c = to_cell
+
+        if not (0 <= r < self.height and 0 <= c < self.width):
+            return False
+
+        if frozenset({from_cell, to_cell}) in self.walls:
+            return False
+
+        for other in self.robots.values():
+            if other.color != moving_color and other.position == to_cell:
+                return False
+
+        return True
+    
 
     def move(self, color, direction):
         robot = self.robots[color]
@@ -136,22 +154,12 @@ class Game:
         dr, dc = directions[direction]
 
         while True:
-            nr = r + dr
-            nc = c + dc
+            next_cell = (r + dr, c + dc)
 
-            # 1) borde
-            if not (0 <= nr < self.height and 0 <= nc < self.width):
+            if not self._can_step((r, c), next_cell, color):
                 break
 
-            # 2) pared
-            if frozenset({(r, c), (nr, nc)}) in self.walls:
-                break
-
-            # 3) otro robot
-            if any(other.position == (nr, nc)
-                   for other in self.robots.values()
-                   if other.color != color):
-                break
+            nr, nc = next_cell
 
             # avanzar
             r, c = nr, nc
@@ -160,8 +168,11 @@ class Game:
             if (r, c) in self.bumpers:
                 bumper = self.bumpers[(r, c)]
                 direction = bumper.reflect(direction, robot.color)
-
                 dr, dc = directions[direction]
+
+        # Si terminó sobre un bumper → movimiento ilegal
+        if (r, c) in self.bumpers:
+            return robot.position, False, True
 
         robot.position = (r, c)
 
@@ -173,5 +184,5 @@ class Game:
                     robot.color == self.active_target.color):
                     won = True
 
-        return robot.position, won
+        return robot.position, won, False # movimiento legal
             

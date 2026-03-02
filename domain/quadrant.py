@@ -1,4 +1,4 @@
-from models import Bumper
+from domain.models import Bumper
 
 class Quadrant:
     def __init__(self, color, variant, size=8, has_bumpers=False):
