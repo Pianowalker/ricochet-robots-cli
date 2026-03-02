@@ -1,7 +1,19 @@
 from sessions import SinglePlayerSession
 from maps import build_random_board
+import os
 
+# Habilitar ANSI en Windows
+if os.name == "nt":
+    os.system("")
 
+COLORS = {
+    "R": "\033[91m",   # rojo
+    "G": "\033[92m",   # verde
+    "Y": "\033[93m",   # amarillo
+    "B": "\033[94m",   # azul
+    "*": "\033[95m",   # comodín (magenta)
+    "RESET": "\033[0m"
+}
 
 
 def print_board(game):
@@ -26,7 +38,7 @@ def print_board(game):
                 else:
                     top_line += "   +"
         print(top_line)
-
+        
         # Línea contenido
         middle_line = f"{r:2} |"
 
@@ -47,14 +59,41 @@ def print_board(game):
 
                         # Bumper
             if (r, c) in game.bumpers:
-                cell = game.bumpers[(r, c)]
+                bumper = game.bumpers[(r, c)]
+                cell = bumper.diagonal  # "/" o "\"
+                bumper_color = bumper.color
 
             # Después robot (sobrescribe)
             for robot in game.robots.values():
                 if robot.position == (r, c):
                     cell = robot.color
 
-            middle_line += f" {cell} "
+            # Aplicar color si corresponde
+            display_cell = cell
+
+            # Si es bumper, usar su color
+            if (r, c) in game.bumpers:
+                bumper = game.bumpers[(r, c)]
+                color_name = bumper.color.lower()
+
+                color_map = {
+                    "red": "R",
+                    "green": "G",
+                    "yellow": "Y",
+                    "blue": "B"
+                }
+
+                if color_name in color_map:
+                    color_key = color_map[color_name]
+                    color_code = COLORS[color_key]
+                    display_cell = f"{color_code}{display_cell}{COLORS['RESET']}"
+
+            # Si no es bumper, usar lógica normal
+            elif isinstance(display_cell, str) and display_cell.upper() in COLORS:
+                color_code = COLORS[display_cell.upper()]
+                display_cell = f"{color_code}{display_cell}{COLORS['RESET']}"
+
+            middle_line += f" {display_cell} "
 
             if c < game.width - 1:
                 if frozenset({(r, c), (r, c+1)}) in game.walls:
@@ -155,9 +194,24 @@ def main():
 
         started = session.start_new_round()
 
+        target = session.game.active_target
+
+        if target.color is None:
+            print("Objetivo: COMODÍN (*)")
+        else:
+            print(f"Objetivo: {target.color.lower()}")
+
         if not started:
             print("\nPartida terminada.")
             print("Score final:", session.score)
+
+            if session.score > 0:
+                print("Resultado: Victoria 🎉")
+            elif session.score < 0:
+                print("Resultado: Derrota 😞")
+            else:
+                print("Resultado: Empate 🤝")
+
             break
 
         print(f"\n=== Ronda {session.current_round}/{session.total_rounds} ===")
@@ -182,7 +236,15 @@ def main():
 
             print_board(game)
 
-            command = input("Movimiento (ej: Rl): ")
+            current_move = session.move_count + 1
+            total_moves = session.declared_moves
+
+            if session.move_count == 0:
+                prompt = f"Movimiento {current_move}/{total_moves} (ej: Rl): "
+            else:
+                prompt = f"Movimiento {current_move}/{total_moves}: "
+
+            command = input(prompt).strip()
 
             try:
                 command = command.strip()
