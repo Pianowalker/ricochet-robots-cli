@@ -1,5 +1,5 @@
-from domain.maps import build_random_board
-from domain.sessions import SinglePlayerSession
+from ricochet.domain.maps import build_random_board
+from ricochet.domain.sessions import SinglePlayerSession
 import os
 
 # Habilitar ANSI en Windows
@@ -13,6 +13,13 @@ COLORS = {
     "B": "\033[94m",   # azul
     "*": "\033[95m",   # comodín (magenta)
     "RESET": "\033[0m"
+}
+
+DISPLAY_MAP = {
+    "blue": "B",
+    "yellow": "Y",
+    "green": "G",
+    "red": "R"
 }
 
 
@@ -53,7 +60,7 @@ def print_board(game):
                         if target.color is None:
                             cell = "*"
                         else:
-                            cell = target.color.lower()
+                            cell = DISPLAY_MAP[target.color].lower()
                     else:
                         cell = "·"
 
@@ -66,7 +73,7 @@ def print_board(game):
             # Después robot (sobrescribe)
             for robot in game.robots.values():
                 if robot.position == (r, c):
-                    cell = robot.color
+                    cell = DISPLAY_MAP[robot.color]
 
             # Aplicar color si corresponde
             display_cell = cell
@@ -174,7 +181,7 @@ def main():
             print("Opción inválida.")
 
     game = build_random_board()
-    game.place_robots_randomly(["R", "B", "G", "Y"])
+    game.place_robots_randomly(["blue", "yellow", "green", "red"])
 
     max_rounds = len(game.targets)
 
@@ -257,6 +264,15 @@ def main():
                 robot_letter = command[0].upper()
                 direction_letter = command[1].lower()
 
+                LETTER_TO_COLOR = {
+                    "B": "blue",
+                    "Y": "yellow",
+                    "G": "green",
+                    "R": "red"
+                }
+
+                robot_color = LETTER_TO_COLOR[robot_letter]
+
                 if robot_letter not in ["R", "B", "G", "Y"]:
                     print("Robot inválido.")
                     continue
@@ -274,12 +290,12 @@ def main():
 
                 direction = direction_map[direction_letter]
 
-                position, won, message = session.move(robot_letter, direction)
+                position, won, message = session.move(robot_color, direction)
 
                 print(message)
 
-            except Exception:
-                print("Comando inválido.")
+            except Exception as e:
+                print("Error:", e)
 
         print("Fin de ronda.")
         print("Score actual:", session.score)

@@ -1,5 +1,12 @@
-from domain.game import Game
-from domain.maps import create_blue_quadrant_v2
+from ricochet.domain.game import Game
+from ricochet.domain.maps import create_blue_quadrant_v2
+
+DISPLAY_MAP = {
+    "blue": "B",
+    "yellow": "Y",
+    "green": "G",
+    "red": "R"
+}
 
 
 def print_single_quadrant(quadrant):
@@ -47,9 +54,9 @@ def print_board_debug(game):
             for target in game.targets:
                 if target.position == (r, c):
                     if target.color is None:
-                        cell = "*"     # comodín
+                        cell = "*"
                     else:
-                        cell = target.color.lower()
+                        cell = DISPLAY_MAP[target.color].lower()
 
             # Bumper
             if (r, c) in game.bumpers:
@@ -59,7 +66,7 @@ def print_board_debug(game):
             # Robot (sobrescribe todo)
             for robot in game.robots.values():
                 if robot.position == (r, c):
-                    cell = robot.color
+                    cell = DISPLAY_MAP[robot.color]
 
             middle_line += f" {cell} "
 

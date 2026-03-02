@@ -1,6 +1,12 @@
 from .models import Bumper, Robot, Target
 import random
 
+LETTER_TO_COLOR = {
+    "B": "blue",
+    "Y": "yellow",
+    "G": "green",
+    "R": "red"
+}
 
 class Game:
     def __init__(self, height, width):
@@ -90,7 +96,8 @@ class Game:
         self.walls.add(frozenset({cell1, cell2}))
 
     def add_target(self, color, symbol, position):
-        self.targets.append(Target(color, symbol, position))
+        full_color = LETTER_TO_COLOR[color] if color is not None else None
+        self.targets.append(Target(full_color, symbol, position))
 
     def activate_target(self, index):
         self.active_target = self.targets[index]
@@ -157,22 +164,17 @@ class Game:
             next_cell = (r + dr, c + dc)
 
             if not self._can_step((r, c), next_cell, color):
+                # Si estamos en un bumper y no podemos salir → ilegal
+                if (r, c) in self.bumpers:
+                    return robot.position, False, True
                 break
 
-            nr, nc = next_cell
+            r, c = next_cell
 
-            # avanzar
-            r, c = nr, nc
-
-            # Chequear bumper
             if (r, c) in self.bumpers:
                 bumper = self.bumpers[(r, c)]
                 direction = bumper.reflect(direction, robot.color)
                 dr, dc = directions[direction]
-
-        # Si terminó sobre un bumper → movimiento ilegal
-        if (r, c) in self.bumpers:
-            return robot.position, False, True
 
         robot.position = (r, c)
 
