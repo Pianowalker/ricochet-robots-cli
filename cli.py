@@ -165,6 +165,14 @@ def main():
         if not started:
             print("\nPartida terminada.")
             print("Score final:", session.score)
+
+            if session.score > 0:
+                print("Resultado: Victoria 🎉")
+            elif session.score < 0:
+                print("Resultado: Derrota 😞")
+            else:
+                print("Resultado: Empate 🤝")
+
             break
 
         print(f"\n=== Ronda {session.current_round}/{session.total_rounds} ===")
