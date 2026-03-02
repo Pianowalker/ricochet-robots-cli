@@ -1,7 +1,19 @@
 from sessions import SinglePlayerSession
 from maps import build_random_board
+import os
 
+# Habilitar ANSI en Windows
+if os.name == "nt":
+    os.system("")
 
+COLORS = {
+    "R": "\033[91m",   # rojo
+    "G": "\033[92m",   # verde
+    "Y": "\033[93m",   # amarillo
+    "B": "\033[94m",   # azul
+    "*": "\033[95m",   # comodín (magenta)
+    "RESET": "\033[0m"
+}
 
 
 def print_board(game):
@@ -26,7 +38,7 @@ def print_board(game):
                 else:
                     top_line += "   +"
         print(top_line)
-
+        
         # Línea contenido
         middle_line = f"{r:2} |"
 
@@ -54,7 +66,14 @@ def print_board(game):
                 if robot.position == (r, c):
                     cell = robot.color
 
-            middle_line += f" {cell} "
+            # Aplicar color si corresponde
+            display_cell = cell
+
+            if isinstance(display_cell, str) and display_cell.upper() in COLORS:
+                color_code = COLORS[display_cell.upper()]
+                display_cell = f"{color_code}{display_cell}{COLORS['RESET']}"
+
+            middle_line += f" {display_cell} "
 
             if c < game.width - 1:
                 if frozenset({(r, c), (r, c+1)}) in game.walls:
