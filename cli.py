@@ -59,7 +59,9 @@ def print_board(game):
 
                         # Bumper
             if (r, c) in game.bumpers:
-                cell = game.bumpers[(r, c)]
+                bumper = game.bumpers[(r, c)]
+                cell = bumper.diagonal  # "/" o "\"
+                bumper_color = bumper.color
 
             # Después robot (sobrescribe)
             for robot in game.robots.values():
@@ -69,7 +71,25 @@ def print_board(game):
             # Aplicar color si corresponde
             display_cell = cell
 
-            if isinstance(display_cell, str) and display_cell.upper() in COLORS:
+            # Si es bumper, usar su color
+            if (r, c) in game.bumpers:
+                bumper = game.bumpers[(r, c)]
+                color_name = bumper.color.lower()
+
+                color_map = {
+                    "red": "R",
+                    "green": "G",
+                    "yellow": "Y",
+                    "blue": "B"
+                }
+
+                if color_name in color_map:
+                    color_key = color_map[color_name]
+                    color_code = COLORS[color_key]
+                    display_cell = f"{color_code}{display_cell}{COLORS['RESET']}"
+
+            # Si no es bumper, usar lógica normal
+            elif isinstance(display_cell, str) and display_cell.upper() in COLORS:
                 color_code = COLORS[display_cell.upper()]
                 display_cell = f"{color_code}{display_cell}{COLORS['RESET']}"
 
