@@ -155,6 +155,13 @@ def main():
 
         started = session.start_new_round()
 
+        target = session.game.active_target
+
+        if target.color is None:
+            print("Objetivo: COMODÍN (*)")
+        else:
+            print(f"Objetivo: {target.color.lower()}")
+
         if not started:
             print("\nPartida terminada.")
             print("Score final:", session.score)
@@ -182,7 +189,15 @@ def main():
 
             print_board(game)
 
-            command = input("Movimiento (ej: Rl): ")
+            current_move = session.move_count + 1
+            total_moves = session.declared_moves
+
+            if session.move_count == 0:
+                prompt = f"Movimiento {current_move}/{total_moves} (ej: Rl): "
+            else:
+                prompt = f"Movimiento {current_move}/{total_moves}: "
+
+            command = input(prompt).strip()
 
             try:
                 command = command.strip()
