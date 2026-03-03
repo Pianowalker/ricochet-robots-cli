@@ -1,3 +1,5 @@
+from email import message
+
 from ricochet.domain.maps import build_random_board
 from ricochet.domain.sessions import SinglePlayerSession
 import os
@@ -293,6 +295,7 @@ def main():
                 position, won, message = session.move(robot_color, direction)
 
                 print(message)
+                print_board(game)
 
             except Exception as e:
                 print("Error:", e)
