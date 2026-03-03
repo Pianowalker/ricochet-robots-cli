@@ -311,7 +311,7 @@ def create_blue_quadrant_v2():
 
 def create_blue_quadrant_v3():
 
-    q = Quadrant("red", 5, has_bumpers=True)
+    q = Quadrant("blue", 3, has_bumpers=True)
 
     # -----------------
     # TARGETS
