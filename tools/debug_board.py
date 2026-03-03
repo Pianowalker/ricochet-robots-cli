@@ -1,5 +1,5 @@
 from ricochet.domain.game import Game
-from ricochet.domain.maps import create_blue_quadrant_v2
+from ricochet.domain.maps import create_red_quadrant_v1
 
 DISPLAY_MAP = {
     "blue": "B",
@@ -88,7 +88,7 @@ def print_board_debug(game):
 
 
 def main():
-    q = create_blue_quadrant_v2()
+    q = create_red_quadrant_v1()
 
     print("\n=== CUADRANTE ORIGINAL ===")
     print_single_quadrant(q)
