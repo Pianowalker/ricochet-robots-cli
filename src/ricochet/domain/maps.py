@@ -215,6 +215,56 @@ def create_blue_quadrant_v2():
 
     return q
 
+def create_blue_quadrant_v4():
+
+    q = Quadrant("blue", 4, has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - luna (1,2)
+    q.add_target("Y", "moon", (1, 2))
+    q.add_wall((1, 1), (1, 2))  # izquierda
+    q.add_wall((1, 2), (2, 2))  # abajo
+
+    # Verde - cruz (2,2)
+    q.add_target("G", "cross", (2, 2))
+    q.add_wall((2, 2), (2, 3))  # derecha
+
+    # Azul - sol (3,7)
+    q.add_target("B", "sun", (3, 7))
+    q.add_wall((2, 7), (3, 7))  # arriba
+    q.add_wall((3, 6), (3, 7))  # izquierda
+
+    # Rojo - planeta (6,5)
+    q.add_target("R", "planet", (6, 5))
+    q.add_wall((6, 5), (7, 5))  # abajo
+    q.add_wall((6, 5), (6, 6))  # derecha
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((4, 0), (5, 0))
+    q.add_wall((7, 6), (7, 7))
+
+    # -----------------
+    # BUMPERS
+    # -----------------
+
+    q.add_bumper((0, 4), "/", "red")
+    q.add_bumper((5, 1), "\\", "blue")
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
 def create_yellow_quadrant_v1():
 
     q = Quadrant("yellow", 1)
@@ -480,7 +530,8 @@ GREEN_QUADRANTS = [
 
 BLUE_QUADRANTS = [
     create_blue_quadrant_v1,
-    create_blue_quadrant_v2
+    create_blue_quadrant_v2,
+    create_blue_quadrant_v4
 ]
 
 RED_QUADRANTS = [
