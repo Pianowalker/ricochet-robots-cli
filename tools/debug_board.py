@@ -1,11 +1,20 @@
 from ricochet.domain.game import Game
-from ricochet.domain.maps import create_red_quadrant_v1
+from ricochet.domain.maps import create_blue_quadrant_v3
 
 DISPLAY_MAP = {
     "blue": "B",
     "yellow": "Y",
     "green": "G",
     "red": "R"
+}
+
+COLORS = {
+    "R": "\033[91m",   # rojo
+    "G": "\033[92m",   # verde
+    "Y": "\033[93m",   # amarillo
+    "B": "\033[94m",   # azul
+    "*": "\033[95m",   # comodín
+    "RESET": "\033[0m"
 }
 
 
@@ -43,14 +52,14 @@ def print_board_debug(game):
                     top_line += "   +"
         print(top_line)
 
-        # Línea contenido
         middle_line = f"{r:2} |"
 
         for c in range(game.width):
 
             cell = "."
+            display_cell = cell
 
-            # Mostrar TODOS los targets
+            # -------- TARGETS --------
             for target in game.targets:
                 if target.position == (r, c):
                     if target.color is None:
@@ -58,17 +67,31 @@ def print_board_debug(game):
                     else:
                         cell = DISPLAY_MAP[target.color].lower()
 
-            # Bumper
+            # -------- BUMPERS --------
             if (r, c) in game.bumpers:
                 bumper = game.bumpers[(r, c)]
                 cell = bumper.diagonal
 
-            # Robot (sobrescribe todo)
+                color_key = DISPLAY_MAP[bumper.color]
+                color_code = COLORS[color_key]
+                display_cell = f"{color_code}{cell}{COLORS['RESET']}"
+
+            else:
+                display_cell = cell
+
+                # Colorear targets
+                if cell == "*":
+                    display_cell = f"{COLORS['*']}{cell}{COLORS['RESET']}"
+                elif cell.upper() in COLORS:
+                    display_cell = f"{COLORS[cell.upper()]}{cell}{COLORS['RESET']}"
+
+            # Robots (sobrescriben todo)
             for robot in game.robots.values():
                 if robot.position == (r, c):
-                    cell = DISPLAY_MAP[robot.color]
+                    robot_letter = DISPLAY_MAP[robot.color]
+                    display_cell = f"{COLORS[robot_letter]}{robot_letter}{COLORS['RESET']}"
 
-            middle_line += f" {cell} "
+            middle_line += f" {display_cell} "
 
             if c < game.width - 1:
                 if frozenset({(r, c), (r, c+1)}) in game.walls:
@@ -88,7 +111,7 @@ def print_board_debug(game):
 
 
 def main():
-    q = create_red_quadrant_v1()
+    q = create_blue_quadrant_v3()
 
     print("\n=== CUADRANTE ORIGINAL ===")
     print_single_quadrant(q)

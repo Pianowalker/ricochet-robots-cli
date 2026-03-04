@@ -116,6 +116,100 @@ def create_green_quadrant_v2():
 
     return q
 
+def create_green_quadrant_v3():
+
+    q = Quadrant("green", 3)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - cruz (1,3)
+    q.add_target("Y", "cross", (1, 3))
+    q.add_wall((1, 3), (1, 4))  # derecha
+    q.add_wall((0, 3), (1, 3))  # arriba
+
+    # Verde - sol (4,1)
+    q.add_target("G", "sun", (4, 1))
+    q.add_wall((4, 0), (4, 1))  # izquierda
+    q.add_wall((4, 1), (5, 1))  # abajo
+
+    # Azul - planeta (3,6)
+    q.add_target("B", "planet", (3, 6))
+    q.add_wall((2, 6), (3, 6))  # arriba
+    q.add_wall((3, 5), (3, 6))  # izquierda
+
+    # Rojo - luna (6,4)
+    q.add_target("R", "moon", (6, 4))
+    q.add_wall((6, 4), (7, 4))  # abajo
+    q.add_wall((6, 4), (6, 5))  # derecha
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((5, 0), (6, 0))
+    q.add_wall((7, 6), (7, 7))
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
+def create_green_quadrant_v4():
+
+    q = Quadrant("green", 4, has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - cruz (1,4)
+    q.add_target("Y", "cross", (1, 4))
+    q.add_wall((1, 4), (1, 5))  # derecha
+    q.add_wall((0, 4), (1, 4))  # arriba
+
+    # Verde - sol (5,6)
+    q.add_target("G", "sun", (5, 6))
+    q.add_wall((5, 5), (5, 6))  # izquierda
+
+    # Azul - planeta (4,6)
+    q.add_target("B", "planet", (4, 6))
+    q.add_wall((4, 6), (5, 6))  # abajo
+    q.add_wall((4, 6), (4, 7))  # derecha
+
+    # Rojo - luna (6,3)
+    q.add_target("R", "moon", (6, 3))
+    q.add_wall((6, 3), (7, 3))  # abajo
+    q.add_wall((6, 2), (6, 3))  # izquierda
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((2, 0), (1, 0))
+    q.add_wall((7, 5), (7, 6))
+
+    # -----------------
+    # BUMPERS
+    # -----------------
+
+    q.add_bumper((2, 7), "/", "yellow")
+    q.add_bumper((3, 1), "\\", "green")
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
 def create_blue_quadrant_v1():
 
     q = Quadrant("blue", 1)
@@ -212,6 +306,100 @@ def create_blue_quadrant_v2():
     # --------------------
     q.add_wall((3, 0), (4, 0))
     q.add_wall((7, 3), (7, 4))
+
+    return q
+
+def create_blue_quadrant_v3():
+
+    q = Quadrant("blue", 3, has_bumpers=False)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Azul - sol (1,3)
+    q.add_target("B", "sun", (1, 3))
+    q.add_wall((1, 3), (1, 4))  # derecha
+    q.add_wall((1, 3), (2, 3))  # abajo
+
+    # Rojo - planeta (3,5)
+    q.add_target("R", "planet", (3, 5))
+    q.add_wall((3, 4), (3, 5))  # izquierda
+    q.add_wall((2, 5), (3, 5))  # arriba
+
+    # Amarillo - luna (5,1)
+    q.add_target("Y", "moon", (5, 1))
+    q.add_wall((5, 1), (6, 1))  # abajo
+    q.add_wall((5, 0), (5, 1))  # izquierda
+
+    # Verde - cruz (6,6)
+    q.add_target("G", "cross", (6, 6))
+    q.add_wall((5, 6), (6, 6))  # arriba
+    q.add_wall((6, 6), (6, 7))  # derecha
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((2, 0), (3, 0))
+    q.add_wall((7, 4), (7, 5))
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
+def create_blue_quadrant_v4():
+
+    q = Quadrant("blue", 4, has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - luna (1,2)
+    q.add_target("Y", "moon", (1, 2))
+    q.add_wall((1, 1), (1, 2))  # izquierda
+    q.add_wall((1, 2), (2, 2))  # abajo
+
+    # Verde - cruz (2,2)
+    q.add_target("G", "cross", (2, 2))
+    q.add_wall((2, 2), (2, 3))  # derecha
+
+    # Azul - sol (3,7)
+    q.add_target("B", "sun", (3, 7))
+    q.add_wall((2, 7), (3, 7))  # arriba
+    q.add_wall((3, 6), (3, 7))  # izquierda
+
+    # Rojo - planeta (6,5)
+    q.add_target("R", "planet", (6, 5))
+    q.add_wall((6, 5), (7, 5))  # abajo
+    q.add_wall((6, 5), (6, 6))  # derecha
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((4, 0), (5, 0))
+    q.add_wall((7, 6), (7, 7))
+
+    # -----------------
+    # BUMPERS
+    # -----------------
+
+    q.add_bumper((0, 4), "/", "red")
+    q.add_bumper((5, 1), "\\", "blue")
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
 
     return q
 
@@ -325,6 +513,110 @@ def create_yellow_quadrant_v2():
 
     return q
 
+def create_yellow_quadrant_v3():
+
+    q = Quadrant("yellow", 3)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - sol (1,4)
+    q.add_target("Y", "sun", (1, 4))
+    q.add_wall((1, 3), (1, 4))  # izquierda
+    q.add_wall((1, 4), (2, 4))  # abajo
+
+    # Verde - planeta (6,3)
+    q.add_target("G", "planet", (6, 3))
+    q.add_wall((6, 3), (6, 4))  # derecha
+    q.add_wall((6, 3), (7, 3))  # abajo
+
+    # Azul - luna (2,6)
+    q.add_target("B", "moon", (2, 6))
+    q.add_wall((1, 6), (2, 6))  # arriba
+    q.add_wall((2, 5), (2, 6))  # izquierda
+
+    # Rojo - cruz (5,1)
+    q.add_target("R", "cross", (5, 1))
+    q.add_wall((4, 1), (5, 1))  # arriba
+    q.add_wall((5, 1), (5, 2))  # derecha
+
+    # Comodín - espiral (4,7)
+    q.add_target(None, "spiral", (4, 7))
+    q.add_wall((3, 7), (4, 7))          # arriba
+    q.add_border_wall((4, 7), "right")  # derecha (borde)
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((2, 0), (3, 0))
+    q.add_wall((7, 4), (7, 5))
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
+def create_yellow_quadrant_v4():
+
+    q = Quadrant("yellow", 4, has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - sol (1,2)
+    q.add_target("Y", "sun", (1, 2))
+    q.add_wall((1, 1), (1, 2))  # izquierda
+    q.add_wall((1, 2), (2, 2))  # abajo
+
+    # Verde - planeta (4,3)
+    q.add_target("G", "planet", (4, 3))
+    q.add_wall((4, 3), (4, 4))  # derecha
+
+    # Azul - luna (5,3)
+    q.add_target("B", "moon", (5, 3))
+    q.add_wall((4, 3), (5, 3))  # arriba
+    q.add_wall((5, 2), (5, 3))  # izquierda
+
+    # Rojo - cruz (6,5)
+    q.add_target("R", "cross", (6, 5))
+    q.add_wall((5, 5), (6, 5))  # arriba
+    q.add_wall((6, 5), (6, 6))  # derecha
+
+    # Comodín - espiral (2,7)
+    q.add_target(None, "spiral", (2, 7))
+    q.add_wall((1, 7), (2, 7))           # arriba
+    q.add_border_wall((2, 7), "right")   # derecha (borde)
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((2, 0), (3, 0))
+    q.add_wall((7, 6), (7, 7))
+
+    # -----------------
+    # BUMPERS
+    # -----------------
+
+    q.add_bumper((5, 1), "/", "red")
+    q.add_bumper((4, 6), "/", "green")
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
 def create_red_quadrant_v1():
 
     q = Quadrant("red", 1, has_bumpers=True)
@@ -371,6 +663,94 @@ def create_red_quadrant_v1():
 
     q.add_wall((0,7),(0,6))
     q.add_wall((0,7),(1,7))
+
+    return q
+
+def create_red_quadrant_v2():
+
+    q = Quadrant("red", 2, has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - planeta (0,5)
+    q.add_target("Y", "planet", (0, 5))
+    q.add_wall((0, 4), (0, 5))  # izquierda
+    q.add_wall((0, 5), (1, 5))  # abajo
+
+    # Verde - luna (1,2)
+    q.add_target("G", "moon", (1, 2))
+    q.add_wall((0, 2), (1, 2))  # arriba
+    q.add_wall((1, 1), (1, 2))  # izquierda
+
+    # Azul - cruz (5,4)
+    q.add_target("B", "cross", (5, 4))
+    q.add_wall((4, 4), (5, 4))  # arriba
+    q.add_wall((5, 4), (5, 5))  # derecha
+
+    # Rojo - sol (6,1)
+    q.add_target("R", "sun", (6, 1))
+    q.add_wall((6, 1), (7, 1))  # abajo
+    q.add_wall((6, 1), (6, 2))  # derecha
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((3, 0), (4, 0))
+    q.add_wall((7, 5), (7, 6))
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
+
+    return q
+
+def create_red_quadrant_v3():
+
+    q = Quadrant("red", 3, has_bumpers=True)
+
+    # -----------------
+    # TARGETS
+    # -----------------
+
+    # Amarillo - planeta (2,5)
+    q.add_target("Y", "planet", (2, 5))
+    q.add_wall((2, 4), (2, 5))  # izquierda
+    q.add_wall((2, 5), (3, 5))  # abajo
+
+    # Verde - luna (3,1)
+    q.add_target("G", "moon", (3, 1))
+    q.add_wall((3, 0), (3, 1))  # izquierda
+    q.add_wall((2, 1), (3, 1))  # arriba
+
+    # Azul - cruz (4,6)
+    q.add_target("B", "cross", (4, 6))
+    q.add_wall((3, 6), (4, 6))  # arriba
+    q.add_wall((4, 6), (4, 7))  # derecha
+
+    # Rojo - sol (6,3)
+    q.add_target("R", "sun", (6, 3))
+    q.add_wall((6, 3), (7, 3))  # abajo
+    q.add_wall((6, 3), (6, 4))  # derecha
+
+    # -----------------
+    # PAREDES EXTRA
+    # -----------------
+
+    q.add_wall((5, 0), (6, 0))
+    q.add_wall((7, 5), (7, 6))
+
+    # -----------------
+    # ENCASTRE (0,7)
+    # -----------------
+
+    q.add_wall((0, 6), (0, 7))  # izquierda
+    q.add_wall((0, 7), (1, 7))  # abajo
 
     return q
 
@@ -432,21 +812,29 @@ def create_red_quadrant_v4():
 GREEN_QUADRANTS = [
     create_green_quadrant_v1,
     create_green_quadrant_v2,
+    create_green_quadrant_v3,
+    create_green_quadrant_v4
 ]
 
 BLUE_QUADRANTS = [
     create_blue_quadrant_v1,
-    create_blue_quadrant_v2
+    create_blue_quadrant_v2,
+    create_blue_quadrant_v3,
+    create_blue_quadrant_v4
 ]
 
 RED_QUADRANTS = [
+    create_red_quadrant_v1,
+    create_red_quadrant_v2,
+    create_red_quadrant_v3,
     create_red_quadrant_v4,
-    create_red_quadrant_v1
 ]
 
 YELLOW_QUADRANTS = [
     create_yellow_quadrant_v1,
-    create_yellow_quadrant_v2
+    create_yellow_quadrant_v2,
+    create_yellow_quadrant_v3,
+    create_yellow_quadrant_v4
 ]
 
 def build_random_board(seed=None):
