@@ -619,7 +619,7 @@ def create_yellow_quadrant_v4():
 
 def create_red_quadrant_v1():
 
-    q = Quadrant("red", 1, has_bumpers=True)
+    q = Quadrant("red", 1, has_bumpers=False)
 
     # -----------------
     # TARGETS
@@ -668,7 +668,7 @@ def create_red_quadrant_v1():
 
 def create_red_quadrant_v2():
 
-    q = Quadrant("red", 2, has_bumpers=True)
+    q = Quadrant("red", 2, has_bumpers=False)
 
     # -----------------
     # TARGETS
@@ -712,7 +712,7 @@ def create_red_quadrant_v2():
 
 def create_red_quadrant_v3():
 
-    q = Quadrant("red", 3, has_bumpers=True)
+    q = Quadrant("red", 3, has_bumpers=False)
 
     # -----------------
     # TARGETS
@@ -837,16 +837,55 @@ YELLOW_QUADRANTS = [
     create_yellow_quadrant_v4
 ]
 
-def build_random_board(seed=None):
+def choose_quadrant(quadrant_factories, mode):
+
+    # Crear todas las variantes posibles
+    quadrants = [factory() for factory in quadrant_factories]
+
+    if mode == "random":
+        return random.choice(quadrants)
+
+    if mode == "no_bumpers":
+        candidates = [q for q in quadrants if not q.has_bumpers]
+        return random.choice(candidates)
+
+    if mode == "at_least_one_bumper":
+        return random.choice(quadrants)
+
+    raise ValueError("Modo inválido")
+
+def build_random_board(mode="random", seed=None):
+
     if seed is not None:
         random.seed(seed)
 
-    q_green = random.choice(GREEN_QUADRANTS)()
-    q_blue = random.choice(BLUE_QUADRANTS)()
-    q_red = random.choice(RED_QUADRANTS)()
-    q_yellow = random.choice(YELLOW_QUADRANTS)()
+    q_green = choose_quadrant(GREEN_QUADRANTS, mode)
+    q_blue = choose_quadrant(BLUE_QUADRANTS, mode)
+    q_red = choose_quadrant(RED_QUADRANTS, mode)
+    q_yellow = choose_quadrant(YELLOW_QUADRANTS, mode)
 
     quadrants = [q_green, q_blue, q_red, q_yellow]
+
+    if mode == "at_least_one_bumper":
+        if not any(q.has_bumpers for q in quadrants):
+
+            # elegir uno al azar
+            index = random.randint(0, 3)
+
+            color_lists = [
+                GREEN_QUADRANTS,
+                BLUE_QUADRANTS,
+                RED_QUADRANTS,
+                YELLOW_QUADRANTS
+            ]
+
+            factories = color_lists[index]
+
+            bumper_quadrants = [
+                f() for f in factories if f().has_bumpers
+            ]
+
+            quadrants[index] = random.choice(bumper_quadrants)
 
     random.shuffle(quadrants)
 
