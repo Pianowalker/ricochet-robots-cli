@@ -182,7 +182,27 @@ def main():
         else:
             print("Opción inválida.")
 
-    game = build_random_board()
+    while True:
+
+        print("\nModo de mapa:")
+        print("1) Aleatorio")
+        print("2) Sin bumpers (fácil)")
+        print("3) Al menos un bumper")
+
+        option = input("Elegí modo: ").strip()
+
+        mode_map = {
+            "1": "random",
+            "2": "no_bumpers",
+            "3": "at_least_one_bumper"
+        }
+
+        if option in mode_map:
+            mode = mode_map[option]
+            break
+        else:
+            print("Opción inválida.")
+    game = build_random_board(mode=mode)
     game.place_robots_randomly(["blue", "yellow", "green", "red"])
 
     max_rounds = len(game.targets)
