@@ -178,8 +178,8 @@ def draw_targets(
     else:
         color = COLOR_TARGET.get(target.color, COLOR_TARGET_WILDCARD)
     radius = CELL_SIZE // 3
-    _draw_target_shape(surface, px, py, target.symbol, color, radius)
     _draw_target_shape(surface, px, py, target.symbol, (255, 255, 255), radius + 2, width=2)
+    _draw_target_shape(surface, px, py, target.symbol, color, radius)
 
 
 def _draw_robot_shape(
