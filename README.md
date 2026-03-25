@@ -50,32 +50,43 @@ The board is built by selecting four distinct quadrants at random and applying c
 
 ## 🚀 How to Run
 
-Make sure you have Python 3.10+ installed.
+Make sure you have Python 3.10+ installed. Install the package first:
 
-python cli.py
+```
+pip install -e .
+```
+
+### GUI version
+
+```
+python -m ricochet.gui.main
+```
+
+### CLI version
+
+```
+python -m ricochet.cli
+```
 
 You will be prompted to choose the number of rounds.
 During each round:
 
-Declare how many moves you believe are needed.
+1. Declare how many moves you believe are needed.
+2. Enter moves in the format `XD`, where:
+   - First letter = Robot color: `R` (red), `B` (blue), `G` (green), `Y` (yellow)
+   - Second letter = Direction: `r` (right), `l` (left), `u` (up), `d` (down)
 
-Enter moves in the format:
+Examples: `Rl` moves the red robot left, `Bd` moves the blue robot down.
 
-R r
-
-Where:
-
-First letter = Robot color (R, B, G, Y)
-
-Second letter = Direction (r, l, u, d)
-
-
+---
 
 🧪 Debug Mode
 
 For development and verification purposes:
 
-python debug_board.py
+```
+python tools/debug_board.py
+```
 
 This prints quadrants and their rotations to validate geometry and wall placement.
 
@@ -102,8 +113,6 @@ Additional official quadrant maps
 Refactoring of movement logic for clarity
 
 Unit testing
-
-Optional graphical interface
 
 Game state persistence
 
