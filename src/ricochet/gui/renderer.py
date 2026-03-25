@@ -182,6 +182,47 @@ def draw_targets(
     _draw_target_shape(surface, px, py, target.symbol, (255, 255, 255), radius + 2, width=2)
 
 
+def _draw_robot_shape(
+    surface: pygame.Surface,
+    px: float,
+    py: float,
+    fill: tuple[int, int, int],
+    selected: bool,
+) -> None:
+    """Dibuja un robot con forma humanoide simple usando primitivas de pygame."""
+    px, py = int(px), int(py)
+
+    # Versión oscura del color para el cuerpo
+    dark = tuple(max(0, ch - 55) for ch in fill)
+
+    # Antena
+    pygame.draw.line(surface, (190, 190, 205), (px, py - 17), (px, py - 23), 2)
+    pygame.draw.circle(surface, (220, 225, 240), (px, py - 23), 3)
+
+    # Cuerpo (rectángulo redondeado, color oscuro)
+    body_rect = pygame.Rect(px - 10, py + 1, 20, 11)
+    pygame.draw.rect(surface, dark, body_rect, border_radius=3)
+    pygame.draw.rect(surface, (170, 175, 190), body_rect, 1, border_radius=3)
+
+    # Cabeza (rectángulo redondeado, color principal)
+    head_rect = pygame.Rect(px - 12, py - 16, 24, 17)
+    pygame.draw.rect(surface, fill, head_rect, border_radius=5)
+
+    # Borde de cabeza: blanco grueso si seleccionado, gris fino si no
+    border_color = (255, 255, 255) if selected else (190, 195, 210)
+    border_w = 3 if selected else 1
+    pygame.draw.rect(surface, border_color, head_rect, border_w, border_radius=5)
+
+    # Ojos (blancos con pupila oscura)
+    for ex in (px - 5, px + 5):
+        ey = py - 10
+        pygame.draw.circle(surface, (235, 240, 255), (ex, ey), 3)
+        pygame.draw.circle(surface, (15, 15, 25), (ex, ey), 1)
+
+    # Boca (línea fina)
+    pygame.draw.line(surface, (190, 195, 210), (px - 5, py - 3), (px + 5, py - 3), 1)
+
+
 def draw_robots(
     surface: pygame.Surface,
     robots: dict,
@@ -192,7 +233,7 @@ def draw_robots(
     selected_color: str | None = None,
 ) -> None:
     """
-    Dibuja los robots como círculos.
+    Dibuja los robots con forma de robot simple.
     robot_override: opcional {color: (row, col)} para posición en celdas.
     robot_pixel_override: opcional {color: (px, py)} posición en píxeles (para animación).
     selected_color: si se proporciona, ese robot recibe un borde más grueso.
@@ -212,10 +253,7 @@ def draw_robots(
             px = offset_x + x
             py = offset_y + y
         fill = COLOR_ROBOT.get(color, (150, 150, 150))
-        radius = CELL_SIZE // 2 - 4
-        pygame.draw.circle(surface, fill, (int(px), int(py)), radius)
-        border_width = 4 if color == selected_color else 2
-        pygame.draw.circle(surface, (255, 255, 255), (int(px), int(py)), radius, border_width)
+        _draw_robot_shape(surface, px, py, fill, selected=(color == selected_color))
 
 
 def draw_bumpers(

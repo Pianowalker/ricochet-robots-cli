@@ -102,19 +102,22 @@ class InputHandler:
                     if robot.position == (row, col):
                         robot_here = color
                         break
-                if self.pending_click_for_direction and self.selected_robot_color and self.selected_robot_color in robots:
-                    # Segundo click: celda indica dirección (Control 3)
+                if robot_here and robot_here != self.selected_robot_color:
+                    # Click sobre otro robot: cambiar selección
+                    self.selected_robot_color = robot_here
+                    self.pending_click_for_direction = True
+                elif self.pending_click_for_direction and self.selected_robot_color and self.selected_robot_color in robots:
+                    # Click en celda vacía con robot seleccionado: mover en esa dirección
                     from_cell = robots[self.selected_robot_color].position
                     direction = get_direction_from_cells(from_cell, (row, col))
                     if direction:
                         actions.append(("move", self.selected_robot_color, direction))
-                    self.pending_click_for_direction = False
-                    # Mantener robot seleccionado para poder hacer más movidas sin volver a clicar
+                    # Mantener pending para poder seguir moviendo sin re-seleccionar
                 elif robot_here:
-                    # Seleccionar robot (o cambiar a otro); se mantiene hasta elegir otro
+                    # Primer click sobre un robot sin selección previa
                     self.selected_robot_color = robot_here
                     self.pending_click_for_direction = True
-                # Clic en celda vacía: no deseleccionar (mantener selección hasta elegir otro robot)
+                # Clic en celda vacía sin selección: no hacer nada
 
         return actions
 
