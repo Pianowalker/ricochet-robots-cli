@@ -58,7 +58,7 @@ class GameWindow:
         self.declaring_moves = False
         self.declare_input_str = ""
         self.total_rounds = 5
-        self.rounds_input_str = "5"
+        self.rounds_input_str = ""
         self.round_end_timer: float = 0.0
 
     def _start_game(self):
