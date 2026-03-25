@@ -20,7 +20,7 @@ def test_session_does_not_count_illegal_move():
     session.declared_moves = 3
     session.move_count = 0
 
-    position, won, message = session.move("Y", "right")
+    _, _, _, _ = session.move("Y", "right")
 
     assert session.move_count == 0
     assert session.round_active is True

@@ -8,7 +8,10 @@
    description = "Ricochet game"
    readme = "README.md"
    requires-python = ">=3.10"
-   dependencies = []
+   dependencies = ["pygame>=2.1.0"]
+
+[project.scripts]
+ricochet-gui = "ricochet.gui.main:main"
  
    [tool.setuptools]
    package-dir = {"" = "src"}

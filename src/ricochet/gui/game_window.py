@@ -1,0 +1,377 @@
+"""
+Ventana principal del juego: estados y flujo.
+Pantallas: MENU, MODE_SELECT, PLAYING, ROUND_END, GAME_END.
+Usa el dominio sin modificarlo: Game, SinglePlayerSession, build_random_board.
+"""
+import pygame
+from ricochet.domain.game import Game
+from ricochet.domain.sessions import SinglePlayerSession
+from ricochet.domain.maps import build_random_board
+
+from .renderer import (
+    draw_board,
+    draw_walls,
+    draw_targets,
+    draw_robots,
+    draw_bumpers,
+    draw_ui,
+    BOARD_PIXEL_WIDTH,
+    BOARD_PIXEL_HEIGHT,
+    CELL_SIZE,
+)
+from .input_handler import InputHandler
+from .animation import RobotAnimation
+from . import sounds
+from . import ui
+
+# Estados de pantalla
+MENU = "menu"
+MODE_SELECT = "mode_select"
+PLAYING = "playing"
+ROUND_END = "round_end"
+GAME_END = "game_end"
+RULES = "rules"
+CONTROLS = "controls"
+
+# Modos para build_random_board
+MODE_MAP = {
+    "random": "random",
+    "no_bumpers": "no_bumpers",
+    "at_least_one_bumper": "at_least_one_bumper",
+}
+
+
+class GameWindow:
+    def __init__(self, screen: pygame.Surface, font: pygame.font.Font):
+        self.screen = screen
+        self.font = font
+        self.state = MENU
+        self.game: Game | None = None
+        self.session: SinglePlayerSession | None = None
+        self.mode: str = "random"
+        self.board_offset_x = 0
+        self.board_offset_y = 0
+        self.input_handler = InputHandler(0, 0)
+        self.active_animation: RobotAnimation | None = None
+        self.round_end_message: str = ""
+        self.buttons: dict = {}
+        self.declaring_moves = False
+        self.declare_input_str = "5"
+        self.total_rounds = 5
+        self.rounds_input_str = "5"
+        self.round_end_timer: float = 0.0
+
+    def _start_game(self):
+        """Crea Game y Session según el modo elegido."""
+        self.game = build_random_board(mode=self.mode)
+        self.game.place_robots_randomly(["red", "green", "blue", "yellow"])
+        max_rounds = min(10, len(self.game.targets) if self.game.targets else 10)
+        try:
+            n = max(1, min(10, int(self.rounds_input_str.strip() or "1")))
+        except ValueError:
+            n = 5
+        self.total_rounds = min(n, max_rounds)
+        self.session = SinglePlayerSession(self.game, total_rounds=self.total_rounds)
+        self.state = PLAYING
+        self.declaring_moves = False
+        self.declare_input_str = "5"
+        started = self.session.start_new_round()
+        if not started:
+            self.state = GAME_END
+        self.input_handler.clear_selection()
+
+    def _get_target_text(self) -> str:
+        if not self.session or not self.session.game.active_target:
+            return "-"
+        t = self.session.game.active_target
+        if t.color is None:
+            return "Comodín (*)"
+        return t.color.capitalize()
+
+    def handle_events(self, events: list) -> bool:
+        """Procesa eventos. Devuelve False si hay que salir (Exit)."""
+        mouse_pos = pygame.mouse.get_pos()
+        for event in events:
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if self.state in (RULES, CONTROLS):
+                    self.state = MENU
+                elif self.declaring_moves:
+                    self.declaring_moves = False
+                else:
+                    return False
+
+        if self.state == MENU:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    bid = ui.get_button_at(self.buttons, e.pos)
+                    if bid == ui.BTN_EXIT:
+                        return False
+                    if bid == ui.BTN_PLAY:
+                        self.state = MODE_SELECT
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    if bid == ui.BTN_RULES:
+                        self.state = RULES
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    if bid == ui.BTN_CONTROLS:
+                        self.state = CONTROLS
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+
+        elif self.state == RULES:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    if ui.get_button_at(self.buttons, e.pos) == ui.BTN_BACK:
+                        self.state = MENU
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+
+        elif self.state == CONTROLS:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    if ui.get_button_at(self.buttons, e.pos) == ui.BTN_BACK:
+                        self.state = MENU
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+
+        elif self.state == MODE_SELECT:
+            for e in events:
+                if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_BACKSPACE:
+                        self.rounds_input_str = self.rounds_input_str[:-1]
+                    elif e.unicode.isdigit() and len(self.rounds_input_str) < 3:
+                        self.rounds_input_str += e.unicode
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    bid = ui.get_button_at(self.buttons, e.pos)
+                    if bid == ui.BTN_MODE_RANDOM:
+                        self.mode = "random"
+                        self._start_game()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_MODE_NO_BUMPERS:
+                        self.mode = "no_bumpers"
+                        self._start_game()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_MODE_AT_LEAST_ONE:
+                        self.mode = "at_least_one_bumper"
+                        self._start_game()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+
+        elif self.state == PLAYING and self.session and self.game:
+            if self.declaring_moves:
+                for e in events:
+                    if e.type == pygame.KEYDOWN:
+                        if e.key == pygame.K_RETURN or e.key == pygame.K_KP_ENTER:
+                            try:
+                                n = int(self.declare_input_str or "0")
+                                if n > 0:
+                                    self.session.declare_solution(n)
+                                    self.declaring_moves = False
+                                    sounds.play(sounds.SOUND_BUTTON_CLICK)
+                            except ValueError:
+                                pass
+                        elif e.key == pygame.K_BACKSPACE:
+                            self.declare_input_str = self.declare_input_str[:-1]
+                        elif e.unicode.isdigit():
+                            self.declare_input_str += e.unicode
+                            if len(self.declare_input_str) > 3:
+                                self.declare_input_str = self.declare_input_str[:3]
+            else:
+                actions = self.input_handler.process_events(events, self.game.robots)
+                for action in actions:
+                    if action[0] == "move" and len(action) == 3:
+                        _, color, direction = action
+                        if not self.session.round_active or self.session.declared_moves is None:
+                            continue
+                        if self.active_animation:
+                            continue
+                        from_pos = self.game.robots[color].position
+                        position, won, message, waypoints = self.session.move(color, direction)
+                        to_pos = position
+                        illegal = "ilegal" in message.lower() or "bumper" in message.lower()
+                        if illegal:
+                            sounds.play(sounds.SOUND_BUMPER_HIT)
+                        elif from_pos != to_pos:
+                            self.active_animation = RobotAnimation(color, from_pos, to_pos, waypoints)
+                            sounds.play(sounds.SOUND_ROBOT_MOVE)
+                        if not self.session.round_active:
+                            self.round_end_message = message
+                            self.round_end_timer = 0.0
+                            if "Exacto" in message or "Punto +1" in message:
+                                sounds.play(sounds.SOUND_WIN_ROUND)
+                            else:
+                                sounds.play(sounds.SOUND_LOSE_ROUND)
+                            self.state = ROUND_END
+                for e in events:
+                    if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                        bid = ui.get_button_at(self.buttons, e.pos)
+                        if bid == ui.BTN_DECLARE_MOVES and self.session.declared_moves is None and self.session.round_active:
+                            self.declaring_moves = True
+                            self.declare_input_str = "5"
+                            sounds.play(sounds.SOUND_BUTTON_CLICK)
+
+        elif self.state == ROUND_END:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    bid = ui.get_button_at(self.buttons, e.pos)
+                    if bid == ui.BTN_NEXT_ROUND:
+                        self._advance_from_round_end()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+
+        elif self.state == GAME_END:
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    self.state = MENU
+                    self.game = None
+                    self.session = None
+
+        return True
+
+    def _advance_from_round_end(self):
+        """Pasa a la siguiente ronda o a fin de partida."""
+        started = self.session.start_new_round()
+        self.round_end_message = ""
+        self.round_end_timer = 0.0
+        if started:
+            self.state = PLAYING
+        else:
+            self.state = GAME_END
+
+    def update(self, dt: float):
+        """Actualiza animaciones y avance automático de ronda."""
+        if self.active_animation:
+            if self.active_animation.update(dt):
+                self.active_animation = None
+        if self.state == ROUND_END and self.session:
+            self.round_end_timer += dt
+            if self.round_end_timer >= 2.0:
+                self._advance_from_round_end()
+
+    def draw(self):
+        """Dibuja la pantalla actual."""
+        self.screen.fill((30, 32, 42))
+        mouse_pos = pygame.mouse.get_pos()
+
+        if self.state == MENU:
+            title = self.font.render("Ricochet Robots", True, (240, 240, 250))
+            r = title.get_rect(center=(self.screen.get_width() // 2, 120))
+            self.screen.blit(title, r)
+            self.buttons = ui.draw_menu_buttons(self.screen, self.font, mouse_pos)
+
+        elif self.state == RULES:
+            title = self.font.render("Reglas", True, (240, 240, 250))
+            self.screen.blit(title, (80, 60))
+            self.buttons = ui.draw_rules_screen(self.screen, self.font, mouse_pos)
+
+        elif self.state == CONTROLS:
+            title = self.font.render("Controles", True, (240, 240, 250))
+            self.screen.blit(title, (80, 60))
+            self.buttons = ui.draw_controls_screen(self.screen, self.font, mouse_pos)
+
+        elif self.state == MODE_SELECT:
+            title = self.font.render("Elegir modo de mapa", True, (240, 240, 250))
+            r = title.get_rect(center=(self.screen.get_width() // 2, 120))
+            self.screen.blit(title, r)
+            self.buttons = ui.draw_mode_buttons(
+                self.screen, self.font, mouse_pos, rounds_input_str=self.rounds_input_str,
+            )
+
+        elif self.state == PLAYING and self.game and self.session:
+            self.board_offset_x = 0
+            self.board_offset_y = 0
+            self.input_handler.set_board_offset(self.board_offset_x, self.board_offset_y)
+            draw_board(self.screen, self.board_offset_x, self.board_offset_y)
+            draw_walls(self.screen, self.game.walls, self.board_offset_x, self.board_offset_y)
+            draw_targets(
+                self.screen, self.game.targets, self.game.active_target,
+                self.board_offset_x, self.board_offset_y,
+            )
+            draw_bumpers(self.screen, self.game.bumpers, self.board_offset_x, self.board_offset_y)
+            robot_pixel_override = None
+            if self.active_animation:
+                px, py = self.active_animation.get_current_pixel_position()
+                robot_pixel_override = {self.active_animation.color: (px, py)}
+            draw_robots(
+                self.screen, self.game.robots,
+                self.board_offset_x, self.board_offset_y,
+                robot_pixel_override=robot_pixel_override,
+                selected_color=self.input_handler.get_selected_robot(),
+            )
+            ui_x = self.board_offset_x + BOARD_PIXEL_WIDTH + 20
+            ui_y = 20
+            draw_ui(
+                self.screen, self.font,
+                self.session.current_round, self.session.total_rounds,
+                self.session.score,
+                self.session.declared_moves, self.session.move_count,
+                active_target=self.game.active_target,
+                offset_x=ui_x, offset_y=ui_y,
+            )
+            if self.declaring_moves:
+                self.buttons = {}
+                # Destacar la consulta de movidas (fondo y texto)
+                prompt_rect = pygame.Rect(ui_x - 8, ui_y + 192, 220, 52)
+                pygame.draw.rect(self.screen, (70, 75, 95), prompt_rect, border_radius=8)
+                pygame.draw.rect(self.screen, (140, 180, 220), prompt_rect, 2, border_radius=8)
+                prompt = self.font.render("¿Cuántas movidas? (Enter para confirmar)", True, (255, 255, 255))
+                self.screen.blit(prompt, (ui_x, ui_y + 200))
+                inp = self.font.render(self.declare_input_str + "_", True, (255, 255, 255))
+                self.screen.blit(inp, (ui_x, ui_y + 235))
+            else:
+                show_declare = self.session.declared_moves is None
+                need_highlight = show_declare and self.session.round_active
+                self.buttons = ui.draw_playing_buttons(
+                    self.screen, self.font, mouse_pos,
+                    can_declare=self.session.round_active and show_declare,
+                    can_next_round=False,
+                    ui_x=ui_x, ui_y=120,
+                    show_declare_button=show_declare,
+                    highlight_declare=need_highlight,
+                )
+
+        elif self.state == ROUND_END and self.session:
+            draw_board(self.screen, self.board_offset_x, self.board_offset_y)
+            draw_walls(self.screen, self.game.walls, self.board_offset_x, self.board_offset_y)
+            draw_targets(
+                self.screen, self.game.targets, self.game.active_target,
+                self.board_offset_x, self.board_offset_y,
+            )
+            draw_bumpers(self.screen, self.game.bumpers, self.board_offset_x, self.board_offset_y)
+            ro = None
+            if self.active_animation:
+                px, py = self.active_animation.get_current_pixel_position()
+                ro = {self.active_animation.color: (px, py)}
+            draw_robots(
+                self.screen, self.game.robots,
+                self.board_offset_x, self.board_offset_y,
+                robot_pixel_override=ro,
+                selected_color=self.input_handler.get_selected_robot(),
+            )
+            ui_x = self.board_offset_x + BOARD_PIXEL_WIDTH + 20
+            draw_ui(
+                self.screen, self.font,
+                self.session.current_round, self.session.total_rounds,
+                self.session.score,
+                self.session.declared_moves, self.session.move_count,
+                active_target=self.game.active_target,
+                offset_x=ui_x, offset_y=20,
+            )
+            msg = self.font.render(self.round_end_message[:50], True, (255, 240, 200))
+            self.screen.blit(msg, (ui_x, 80))
+            remaining = max(0, 2.0 - self.round_end_timer)
+            auto_msg = self.font.render(f"Siguiente ronda en {remaining:.1f}s (o clic en botón)", True, (180, 190, 210))
+            self.screen.blit(auto_msg, (ui_x, 105))
+            self.buttons = ui.draw_playing_buttons(
+                self.screen, self.font, mouse_pos,
+                can_declare=False, can_next_round=True,
+                ui_x=ui_x, ui_y=120,
+                show_declare_button=False,
+            )
+
+        elif self.state == GAME_END and self.session:
+            title = self.font.render("Partida terminada", True, (240, 240, 250))
+            r = title.get_rect(center=(self.screen.get_width() // 2, 200))
+            self.screen.blit(title, r)
+            score_txt = self.font.render(f"Score final: {self.session.score}", True, (200, 200, 220))
+            r2 = score_txt.get_rect(center=(self.screen.get_width() // 2, 260))
+            self.screen.blit(score_txt, r2)
+            click = self.font.render("Clic para volver al menú", True, (180, 180, 200))
+            r3 = click.get_rect(center=(self.screen.get_width() // 2, 320))
+            self.screen.blit(click, r3)
