@@ -56,7 +56,7 @@ class GameWindow:
         self.round_end_message: str = ""
         self.buttons: dict = {}
         self.declaring_moves = False
-        self.declare_input_str = "5"
+        self.declare_input_str = ""
         self.total_rounds = 5
         self.rounds_input_str = "5"
         self.round_end_timer: float = 0.0
@@ -74,7 +74,7 @@ class GameWindow:
         self.session = SinglePlayerSession(self.game, total_rounds=self.total_rounds)
         self.state = PLAYING
         self.declaring_moves = False
-        self.declare_input_str = "5"
+        self.declare_input_str = ""
         started = self.session.start_new_round()
         if not started:
             self.state = GAME_END
@@ -204,7 +204,7 @@ class GameWindow:
                         bid = ui.get_button_at(self.buttons, e.pos)
                         if bid == ui.BTN_DECLARE_MOVES and self.session.declared_moves is None and self.session.round_active:
                             self.declaring_moves = True
-                            self.declare_input_str = "5"
+                            self.declare_input_str = ""
                             sounds.play(sounds.SOUND_BUTTON_CLICK)
 
         elif self.state == ROUND_END:
