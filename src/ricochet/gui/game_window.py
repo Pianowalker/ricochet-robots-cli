@@ -353,17 +353,27 @@ class GameWindow:
                 active_target=self.game.active_target,
                 offset_x=ui_x, offset_y=20,
             )
-            msg = self.font.render(self.round_end_message[:50], True, (255, 240, 200))
-            self.screen.blit(msg, (ui_x, 80))
-            remaining = max(0, 2.0 - self.round_end_timer)
-            auto_msg = self.font.render(f"Siguiente ronda en {remaining:.1f}s (o clic en botón)", True, (180, 190, 210))
-            self.screen.blit(auto_msg, (ui_x, 105))
             self.buttons = ui.draw_playing_buttons(
                 self.screen, self.font, mouse_pos,
                 can_declare=False, can_next_round=True,
                 ui_x=ui_x, ui_y=120,
                 show_declare_button=False,
             )
+            # Panel flotante centrado sobre el tablero
+            panel_w, panel_h = 460, 110
+            panel_x = self.board_offset_x + (BOARD_PIXEL_WIDTH - panel_w) // 2
+            panel_y = self.board_offset_y + (BOARD_PIXEL_HEIGHT - panel_h) // 2
+            panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+            panel_surf.fill((20, 22, 32, 210))
+            self.screen.blit(panel_surf, (panel_x, panel_y))
+            pygame.draw.rect(self.screen, (140, 160, 200), (panel_x, panel_y, panel_w, panel_h), 2, border_radius=8)
+            msg = self.font.render(self.round_end_message[:60], True, (255, 240, 200))
+            msg_r = msg.get_rect(centerx=panel_x + panel_w // 2, top=panel_y + 20)
+            self.screen.blit(msg, msg_r)
+            remaining = max(0, 2.0 - self.round_end_timer)
+            auto_msg = self.font.render(f"Siguiente ronda en {remaining:.1f}s  (o clic en botón)", True, (160, 175, 200))
+            auto_r = auto_msg.get_rect(centerx=panel_x + panel_w // 2, top=panel_y + 62)
+            self.screen.blit(auto_msg, auto_r)
 
         elif self.state == GAME_END and self.session:
             title = self.font.render("Partida terminada", True, (240, 240, 250))
