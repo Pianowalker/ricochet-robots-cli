@@ -77,6 +77,7 @@ class InputHandler:
                 # Control 2: R/B/G/Y + flecha (tecla letra guarda color para la siguiente flecha)
                 if event.key in KEY_TO_COLOR:
                     self._pending_key_robot = KEY_TO_COLOR[event.key]
+                    self.selected_robot_color = self._pending_key_robot
                     continue
                 if event.key in ARROW_TO_DIRECTION:
                     direction = ARROW_TO_DIRECTION[event.key]
