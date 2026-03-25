@@ -81,9 +81,10 @@ class InputHandler:
                 if event.key in ARROW_TO_DIRECTION:
                     direction = ARROW_TO_DIRECTION[event.key]
                     # Si hay robot seleccionado (Control 1) o pendiente de tecla (Control 2)
-                    color = self.selected_robot_color or getattr(self, "_pending_key_robot", None)
+                    color = self._pending_key_robot or self.selected_robot_color
                     if color and color in robots:
                         actions.append(("move", color, direction))
+                        self.selected_robot_color = color  # mantener selección para movidas siguientes
                     self._pending_key_robot = None
                     continue
                 self._pending_key_robot = None
