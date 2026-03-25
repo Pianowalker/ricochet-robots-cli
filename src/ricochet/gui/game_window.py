@@ -200,6 +200,11 @@ class GameWindow:
                                 sounds.play(sounds.SOUND_LOSE_ROUND)
                             self.state = ROUND_END
                 for e in events:
+                    if e.type == pygame.KEYDOWN:
+                        if (e.key == pygame.K_RETURN or e.key == pygame.K_KP_ENTER) and self.session.declared_moves is None and self.session.round_active:
+                            self.declaring_moves = True
+                            self.declare_input_str = ""
+                            sounds.play(sounds.SOUND_BUTTON_CLICK)
                     if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                         bid = ui.get_button_at(self.buttons, e.pos)
                         if bid == ui.BTN_DECLARE_MOVES and self.session.declared_moves is None and self.session.round_active:
