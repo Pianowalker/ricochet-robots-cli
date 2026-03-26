@@ -312,7 +312,7 @@ def main():
 
                 direction = direction_map[direction_letter]
 
-                position, won, message = session.move(robot_color, direction)
+                position, won, message, _ = session.move(robot_color, direction)
 
                 print(message)
                 print_board(game)

@@ -159,6 +159,7 @@ class Game:
         }
 
         dr, dc = directions[direction]
+        waypoints = [(r, c)]
 
         while True:
             next_cell = (r + dr, c + dc)
@@ -166,10 +167,11 @@ class Game:
             if not self._can_step((r, c), next_cell, color):
                 # Si estamos en un bumper y no podemos salir → ilegal
                 if (r, c) in self.bumpers:
-                    return robot.position, False, True
+                    return robot.position, False, True, []
                 break
 
             r, c = next_cell
+            waypoints.append((r, c))
 
             if (r, c) in self.bumpers:
                 bumper = self.bumpers[(r, c)]
@@ -186,5 +188,5 @@ class Game:
                     robot.color == self.active_target.color):
                     won = True
 
-        return robot.position, won, False # movimiento legal
+        return robot.position, won, False, waypoints  # movimiento legal
             

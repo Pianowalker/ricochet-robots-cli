@@ -13,7 +13,7 @@ def test_bumper_illegal_move():
     # Robot amarillo a la izquierda
     game.add_robot("Y", (1, 0))
 
-    position, won, illegal = game.move("Y", "right")
+    _, _, illegal, _ = game.move("Y", "right")
 
     assert illegal is True
     assert game.robots["Y"].position == (1, 0)

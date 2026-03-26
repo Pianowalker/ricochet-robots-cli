@@ -68,15 +68,15 @@ class SinglePlayerSession:
 
     def move(self, color, direction):
         if not self.round_active:
-            return None, False, "La ronda no está activa"
+            return None, False, "La ronda no está activa", []
 
         if self.declared_moves is None:
-            return None, False, "Primero declarás la cantidad de movidas"
+            return None, False, "Primero declarás la cantidad de movidas", []
 
-        position, won, illegal = self.game.move(color, direction)
+        position, won, illegal, waypoints = self.game.move(color, direction)
 
         if illegal:
-            return position, False, "Movimiento ilegal: no se puede terminar en un bumper"
+            return position, False, "Movimiento ilegal: no se puede terminar en un bumper", []
 
         self.move_count += 1
 
@@ -85,7 +85,7 @@ class SinglePlayerSession:
             self.score -= 1
             self._reset_to_round_start()
             self.round_active = False
-            return position, False, "Excediste la cantidad declarada. Punto -1"
+            return position, False, "Excediste la cantidad declarada. Punto -1", waypoints
 
         # Ganó
         if won:
@@ -97,6 +97,6 @@ class SinglePlayerSession:
                 result = "Llegaste pero no en la cantidad exacta. Punto -1"
 
             self.round_active = False
-            return position, True, result
+            return position, True, result, waypoints
 
-        return position, False, "Movimiento realizado"
+        return position, False, "Movimiento realizado", waypoints
