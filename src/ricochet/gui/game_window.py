@@ -387,6 +387,15 @@ class GameWindow:
             score_txt = self.font.render(f"Score final: {self.session.score}", True, (200, 200, 220))
             r2 = score_txt.get_rect(center=(self.screen.get_width() // 2, 260))
             self.screen.blit(score_txt, r2)
+            if self.session.score > 0:
+                result_text, result_color = "Resultado: Victoria", (120, 220, 120)
+            elif self.session.score < 0:
+                result_text, result_color = "Resultado: Derrota", (220, 100, 100)
+            else:
+                result_text, result_color = "Resultado: Empate", (200, 200, 150)
+            result_surf = self.font.render(result_text, True, result_color)
+            r_res = result_surf.get_rect(center=(self.screen.get_width() // 2, 300))
+            self.screen.blit(result_surf, r_res)
             click = self.font.render("Clic para volver al menú", True, (180, 180, 200))
-            r3 = click.get_rect(center=(self.screen.get_width() // 2, 320))
+            r3 = click.get_rect(center=(self.screen.get_width() // 2, 360))
             self.screen.blit(click, r3)
