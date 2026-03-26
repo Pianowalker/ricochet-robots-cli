@@ -16,6 +16,10 @@ BTN_MODE_AT_LEAST_ONE = "mode_at_least_one"
 BTN_DECLARE_MOVES = "declare_moves"
 BTN_NEXT_ROUND = "next_round"
 BTN_BACK = "back"
+BTN_GAME_MODE_MATCH = "game_mode_match"
+BTN_GAME_MODE_PRACTICE = "game_mode_practice"
+BTN_NEXT_PUZZLE = "next_puzzle"
+BTN_RESET_PUZZLE = "reset_puzzle"
 
 # Colores
 COLOR_BTN = (80, 90, 120)
@@ -70,7 +74,8 @@ def draw_mode_buttons(
     surface: pygame.Surface,
     font: pygame.font.Font,
     mouse_pos: tuple[int, int],
-    rounds_input_str: str = "5",
+    rounds_input_str: str = "",
+    show_rounds: bool = True,
 ) -> dict[str, pygame.Rect]:
     """Dibuja botones de selección de modo de mapa y campo para escribir cantidad de rondas."""
     w, h = surface.get_size()
@@ -87,15 +92,60 @@ def draw_mode_buttons(
         rect = pygame.Rect(cx - 140, start_y + i * step, 280, 38)
         buttons[bid] = rect
         draw_button(surface, font, label, rect, rect.collidepoint(mouse_pos))
-    # Rondas: texto explicativo y campo de entrada
-    rnd_y = start_y + 3 * step + 16
-    label1 = font.render("Rondas a jugar (mín 1, máx 10):", True, COLOR_LABEL)
-    surface.blit(label1, (cx - 200, rnd_y))
-    input_rect = pygame.Rect(cx - 140, rnd_y + 28, 120, 32)
-    pygame.draw.rect(surface, (55, 58, 72), input_rect, border_radius=6)
-    pygame.draw.rect(surface, (140, 150, 180), input_rect, 2, border_radius=6)
-    txt = font.render(rounds_input_str + "_", True, (240, 240, 250))
-    surface.blit(txt, (input_rect.x + 8, input_rect.centery - txt.get_height() // 2))
+    if show_rounds:
+        rnd_y = start_y + 3 * step + 16
+        label1 = font.render("Rondas a jugar (mín 1, máx 10):", True, COLOR_LABEL)
+        surface.blit(label1, (cx - 200, rnd_y))
+        input_rect = pygame.Rect(cx - 140, rnd_y + 28, 120, 32)
+        pygame.draw.rect(surface, (55, 58, 72), input_rect, border_radius=6)
+        pygame.draw.rect(surface, (140, 150, 180), input_rect, 2, border_radius=6)
+        txt = font.render(rounds_input_str + "_", True, (240, 240, 250))
+        surface.blit(txt, (input_rect.x + 8, input_rect.centery - txt.get_height() // 2))
+    return buttons
+
+
+def draw_game_mode_select_buttons(
+    surface: pygame.Surface,
+    font: pygame.font.Font,
+    mouse_pos: tuple[int, int],
+) -> dict[str, pygame.Rect]:
+    """Pantalla intermedia: elegir entre Partida y Práctica."""
+    w, h = surface.get_size()
+    cx = w // 2
+    start_y = 200
+    step = 48
+    buttons = {}
+    labels = [
+        (BTN_GAME_MODE_MATCH, "Partida"),
+        (BTN_GAME_MODE_PRACTICE, "Practica"),
+        (BTN_BACK, "Volver"),
+    ]
+    for i, (bid, label) in enumerate(labels):
+        rect = pygame.Rect(cx - 100, start_y + i * step, 200, 40)
+        buttons[bid] = rect
+        draw_button(surface, font, label, rect, rect.collidepoint(mouse_pos))
+    return buttons
+
+
+def draw_practice_buttons(
+    surface: pygame.Surface,
+    font: pygame.font.Font,
+    mouse_pos: tuple[int, int],
+    ui_x: int,
+    ui_y: int,
+) -> dict[str, pygame.Rect]:
+    """Botones del panel lateral en modo práctica."""
+    buttons = {}
+    by = ui_y + 180
+    labels = [
+        (BTN_RESET_PUZZLE, "Reiniciar"),
+        (BTN_NEXT_PUZZLE, "Siguiente puzzle"),
+    ]
+    for bid, label in labels:
+        rect = pygame.Rect(ui_x, by, 180, 36)
+        buttons[bid] = rect
+        draw_button(surface, font, label, rect, rect.collidepoint(mouse_pos))
+        by += 50
     return buttons
 
 
