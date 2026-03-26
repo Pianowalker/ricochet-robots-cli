@@ -15,6 +15,8 @@ a = Analysis(
         'ricochet.domain.maps',
         'ricochet.domain.quadrant',
         'ricochet.domain.sessions',
+        'ricochet.domain.sessions.single_player_session',
+        'ricochet.domain.sessions.practice_session',
         'ricochet.gui',
         'ricochet.gui.main',
         'ricochet.gui.game_window',

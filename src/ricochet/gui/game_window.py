@@ -5,8 +5,8 @@ Usa el dominio sin modificarlo: Game, SinglePlayerSession, build_random_board.
 """
 import pygame
 from ricochet.domain.game import Game
-from ricochet.domain.sessions import SinglePlayerSession
-from ricochet.domain.practice_session import PracticeSession
+from ricochet.domain.sessions.single_player_session import SinglePlayerSession
+from ricochet.domain.sessions.practice_session import PracticeSession
 from ricochet.domain.maps import build_random_board
 
 from .renderer import (
