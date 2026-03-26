@@ -133,12 +133,12 @@ def draw_rules_screen(surface: pygame.Surface, font: pygame.font.Font, mouse_pos
     """Pantalla de reglas con botón Volver."""
     rules = [
         "Robots: R (rojo), B (azul), G (verde), Y (amarillo).",
-        "Objetivo: llevar el robot al target del mismo color",
-        "en la cantidad de movidas que declarás.",
-        "Comodín (*): cualquier robot puede alcanzarlo.",
-        "Robots se deslizan hasta pared, robot o borde.",
-        "Resortes (/ \\) reflejan el movimiento.",
-        "+1 si acertás exacto; -1 si no.",
+        "Objetivo: Llevar un robot al símbolo de su mismo color",
+        "en la cantidad de movidas que declarás previamente.",
+        "Comodín (tiene forma de espiral): cualquier robot puede alcanzarlo.",
+        "Los robots se deslizan hasta una pared, un robot o un borde.",
+        "Los resortes (bumpers) (/ \\) reflejan el movimiento.",
+        "Puntaje: +1 si acertás exacto; -1 si no.",
     ]
     y = 120
     for line in rules:
