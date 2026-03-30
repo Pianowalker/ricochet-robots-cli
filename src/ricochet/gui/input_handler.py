@@ -14,6 +14,7 @@ KEY_TO_COLOR = {
     pygame.K_b: "blue",
     pygame.K_g: "green",
     pygame.K_y: "yellow",
+    pygame.K_w: "gray",
 }
 
 ARROW_TO_DIRECTION = {

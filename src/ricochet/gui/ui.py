@@ -20,6 +20,8 @@ BTN_GAME_MODE_MATCH = "game_mode_match"
 BTN_GAME_MODE_PRACTICE = "game_mode_practice"
 BTN_NEXT_PUZZLE = "next_puzzle"
 BTN_RESET_PUZZLE = "reset_puzzle"
+BTN_TOGGLE_EASY = "toggle_easy"
+BTN_ABANDON = "abandon"
 
 # Colores
 COLOR_BTN = (80, 90, 120)
@@ -76,6 +78,7 @@ def draw_mode_buttons(
     mouse_pos: tuple[int, int],
     rounds_input_str: str = "",
     show_rounds: bool = True,
+    easy_mode: bool = False,
 ) -> dict[str, pygame.Rect]:
     """Dibuja botones de selección de modo de mapa y campo para escribir cantidad de rondas."""
     w, h = surface.get_size()
@@ -101,6 +104,17 @@ def draw_mode_buttons(
         pygame.draw.rect(surface, (140, 150, 180), input_rect, 2, border_radius=6)
         txt = font.render(rounds_input_str + "_", True, (240, 240, 250))
         surface.blit(txt, (input_rect.x + 8, input_rect.centery - txt.get_height() // 2))
+    # Toggle modo fácil (5 robots con gris)
+    easy_y = start_y + 3 * step + (80 if show_rounds else 16)
+    easy_label = "Modo facil (5 robots): ON" if easy_mode else "Modo facil (5 robots): OFF"
+    easy_color = (80, 140, 80) if easy_mode else COLOR_BTN
+    easy_rect = pygame.Rect(cx - 140, easy_y, 280, 38)
+    pygame.draw.rect(surface, easy_color, easy_rect, border_radius=6)
+    pygame.draw.rect(surface, (120, 130, 160), easy_rect, 2, border_radius=6)
+    easy_txt = font.render(easy_label, True, COLOR_BTN_TEXT)
+    surface.blit(easy_txt, (easy_rect.centerx - easy_txt.get_width() // 2,
+                             easy_rect.centery - easy_txt.get_height() // 2))
+    buttons[BTN_TOGGLE_EASY] = easy_rect
     return buttons
 
 
@@ -146,6 +160,13 @@ def draw_practice_buttons(
         buttons[bid] = rect
         draw_button(surface, font, label, rect, rect.collidepoint(mouse_pos))
         by += 50
+    rect_abandon = pygame.Rect(ui_x, by + 10, 180, 36)
+    buttons[BTN_ABANDON] = rect_abandon
+    hover_abandon = rect_abandon.collidepoint(mouse_pos)
+    pygame.draw.rect(surface, (130, 50, 50) if hover_abandon else (100, 40, 40), rect_abandon, border_radius=6)
+    pygame.draw.rect(surface, (180, 80, 80), rect_abandon, 2, border_radius=6)
+    txt = font.render("Abandonar", True, (240, 200, 200))
+    surface.blit(txt, (rect_abandon.centerx - txt.get_width() // 2, rect_abandon.centery - txt.get_height() // 2))
     return buttons
 
 
@@ -176,6 +197,14 @@ def draw_playing_buttons(
     rect_next = pygame.Rect(ui_x, by, 180, 36)
     buttons[BTN_NEXT_ROUND] = rect_next
     draw_button(surface, font, "Siguiente ronda", rect_next, rect_next.collidepoint(mouse_pos) and can_next_round)
+    by += 60
+    rect_abandon = pygame.Rect(ui_x, by, 180, 36)
+    buttons[BTN_ABANDON] = rect_abandon
+    hover_abandon = rect_abandon.collidepoint(mouse_pos)
+    pygame.draw.rect(surface, (130, 50, 50) if hover_abandon else (100, 40, 40), rect_abandon, border_radius=6)
+    pygame.draw.rect(surface, (180, 80, 80), rect_abandon, 2, border_radius=6)
+    txt = font.render("Abandonar", True, (240, 200, 200))
+    surface.blit(txt, (rect_abandon.centerx - txt.get_width() // 2, rect_abandon.centery - txt.get_height() // 2))
     return buttons
 
 
@@ -183,12 +212,13 @@ def draw_rules_screen(surface: pygame.Surface, font: pygame.font.Font, mouse_pos
     """Pantalla de reglas con botón Volver."""
     rules = [
         "Robots: R (rojo), B (azul), G (verde), Y (amarillo).",
-        "Objetivo: Llevar un robot al símbolo de su mismo color",
-        "en la cantidad de movidas que declarás previamente.",
-        "Comodín (tiene forma de espiral): cualquier robot puede alcanzarlo.",
+        "Modo facil: agrega el robot gris (W), solo sirve de apoyo, nunca es objetivo.",
+        "Objetivo: Llevar un robot al simbolo de su mismo color",
+        "en la cantidad de movidas que declaras previamente.",
+        "Comodin (forma de espiral): cualquier robot de color puede alcanzarlo (no el gris).",
         "Los robots se deslizan hasta una pared, un robot o un borde.",
         "Los resortes (bumpers) (/ \\) reflejan el movimiento.",
-        "Puntaje: +1 si acertás exacto; -1 si no.",
+        "Puntaje: +1 si acertas exacto; -1 si no.",
     ]
     y = 120
     for line in rules:
@@ -212,7 +242,7 @@ def draw_controls_screen(surface: pygame.Surface, font: pygame.font.Font, mouse_
         "  El robot queda seleccionado hasta que elijas otro.",
         "",
         "Con el teclado:",
-        "  R (rojo), B (azul), G (verde), Y (amarillo)",
+        "  R (rojo), B (azul), G (verde), Y (amarillo), W (gris, modo facil)",
         "  para elegir robot, luego flechas (↑↓←→).",
     ]
     y = 100

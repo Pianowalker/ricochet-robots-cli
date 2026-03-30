@@ -25,6 +25,7 @@ COLOR_ROBOT = {
     "green": (60, 180, 80),
     "blue": (60, 100, 220),
     "yellow": (220, 200, 60),
+    "gray": (150, 155, 165),
 }
 
 # Targets: mismos colores pero más tenues

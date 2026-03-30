@@ -66,11 +66,15 @@ class GameWindow:
         self.practice_session: PracticeSession | None = None
         self._is_practice_mode: bool = False
         self.practice_message: str = ""
+        self.easy_mode: bool = False
 
     def _start_game(self):
         """Crea Game y Session según el modo elegido."""
         self.game = build_random_board(mode=self.mode)
-        self.game.place_robots_randomly(["red", "green", "blue", "yellow"])
+        colors = ["red", "green", "blue", "yellow"]
+        if self.easy_mode:
+            colors = colors + ["gray"]
+        self.game.place_robots_randomly(colors)
         max_rounds = min(10, len(self.game.targets) if self.game.targets else 10)
         try:
             n = max(1, min(10, int(self.rounds_input_str.strip() or "1")))
@@ -89,13 +93,25 @@ class GameWindow:
     def _start_practice(self):
         """Crea Game y PracticeSession para el modo práctica."""
         self.game = build_random_board(mode=self.mode)
-        self.game.place_robots_randomly(["red", "green", "blue", "yellow"])
+        colors = ["red", "green", "blue", "yellow"]
+        if self.easy_mode:
+            colors = colors + ["gray"]
+        self.game.place_robots_randomly(colors)
         self.session = None
         self.practice_session = PracticeSession(self.game)
         self.practice_session.start_puzzle()
         self.state = PRACTICE
         self.practice_message = ""
         self.input_handler.clear_selection()
+
+    def _abandon_to_menu(self):
+        """Abandona la partida o práctica activa y vuelve al menú."""
+        self.session = None
+        self.practice_session = None
+        self.practice_message = ""
+        self.active_animation = None
+        self.input_handler.clear_selection()
+        self.state = MENU
 
     def _get_target_text(self) -> str:
         if not self.session or not self.session.game.active_target:
@@ -114,12 +130,11 @@ class GameWindow:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 if self.state in (RULES, CONTROLS, GAME_MODE_SELECT):
                     self.state = MENU
-                elif self.state == PRACTICE:
-                    self.state = MENU
-                    self.practice_session = None
-                    self.practice_message = ""
-                elif self.declaring_moves:
-                    self.declaring_moves = False
+                elif self.state in (PLAYING, PRACTICE, ROUND_END):
+                    if self.declaring_moves:
+                        self.declaring_moves = False
+                    else:
+                        self._abandon_to_menu()
                 else:
                     return False
 
@@ -190,6 +205,9 @@ class GameWindow:
                         self.mode = "at_least_one_bumper"
                         self._start_practice() if self._is_practice_mode else self._start_game()
                         sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_TOGGLE_EASY:
+                        self.easy_mode = not self.easy_mode
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
 
         elif self.state == PLAYING and self.session and self.game:
             if self.declaring_moves:
@@ -248,6 +266,8 @@ class GameWindow:
                             self.declaring_moves = True
                             self.declare_input_str = ""
                             sounds.play(sounds.SOUND_BUTTON_CLICK)
+                        elif bid == ui.BTN_ABANDON:
+                            self._abandon_to_menu()
 
         elif self.state == PRACTICE and self.practice_session and self.game:
             actions = self.input_handler.process_events(events, self.game.robots)
@@ -280,6 +300,8 @@ class GameWindow:
                         self.practice_message = ""
                         self.input_handler.clear_selection()
                         sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_ABANDON:
+                        self._abandon_to_menu()
 
         elif self.state == ROUND_END:
             for e in events:
@@ -353,6 +375,7 @@ class GameWindow:
                 self.screen, self.font, mouse_pos,
                 rounds_input_str=self.rounds_input_str,
                 show_rounds=not self._is_practice_mode,
+                easy_mode=self.easy_mode,
             )
 
         elif self.state == PLAYING and self.game and self.session:
