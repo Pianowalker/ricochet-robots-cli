@@ -21,6 +21,7 @@ BTN_GAME_MODE_PRACTICE = "game_mode_practice"
 BTN_NEXT_PUZZLE = "next_puzzle"
 BTN_RESET_PUZZLE = "reset_puzzle"
 BTN_TOGGLE_EASY = "toggle_easy"
+BTN_ABANDON = "abandon"
 
 # Colores
 COLOR_BTN = (80, 90, 120)
@@ -159,6 +160,13 @@ def draw_practice_buttons(
         buttons[bid] = rect
         draw_button(surface, font, label, rect, rect.collidepoint(mouse_pos))
         by += 50
+    rect_abandon = pygame.Rect(ui_x, by + 10, 180, 36)
+    buttons[BTN_ABANDON] = rect_abandon
+    hover_abandon = rect_abandon.collidepoint(mouse_pos)
+    pygame.draw.rect(surface, (130, 50, 50) if hover_abandon else (100, 40, 40), rect_abandon, border_radius=6)
+    pygame.draw.rect(surface, (180, 80, 80), rect_abandon, 2, border_radius=6)
+    txt = font.render("Abandonar", True, (240, 200, 200))
+    surface.blit(txt, (rect_abandon.centerx - txt.get_width() // 2, rect_abandon.centery - txt.get_height() // 2))
     return buttons
 
 
@@ -189,6 +197,14 @@ def draw_playing_buttons(
     rect_next = pygame.Rect(ui_x, by, 180, 36)
     buttons[BTN_NEXT_ROUND] = rect_next
     draw_button(surface, font, "Siguiente ronda", rect_next, rect_next.collidepoint(mouse_pos) and can_next_round)
+    by += 60
+    rect_abandon = pygame.Rect(ui_x, by, 180, 36)
+    buttons[BTN_ABANDON] = rect_abandon
+    hover_abandon = rect_abandon.collidepoint(mouse_pos)
+    pygame.draw.rect(surface, (130, 50, 50) if hover_abandon else (100, 40, 40), rect_abandon, border_radius=6)
+    pygame.draw.rect(surface, (180, 80, 80), rect_abandon, 2, border_radius=6)
+    txt = font.render("Abandonar", True, (240, 200, 200))
+    surface.blit(txt, (rect_abandon.centerx - txt.get_width() // 2, rect_abandon.centery - txt.get_height() // 2))
     return buttons
 
 

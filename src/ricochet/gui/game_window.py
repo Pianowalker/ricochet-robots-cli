@@ -104,6 +104,15 @@ class GameWindow:
         self.practice_message = ""
         self.input_handler.clear_selection()
 
+    def _abandon_to_menu(self):
+        """Abandona la partida o práctica activa y vuelve al menú."""
+        self.session = None
+        self.practice_session = None
+        self.practice_message = ""
+        self.active_animation = None
+        self.input_handler.clear_selection()
+        self.state = MENU
+
     def _get_target_text(self) -> str:
         if not self.session or not self.session.game.active_target:
             return "-"
@@ -121,12 +130,11 @@ class GameWindow:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 if self.state in (RULES, CONTROLS, GAME_MODE_SELECT):
                     self.state = MENU
-                elif self.state == PRACTICE:
-                    self.state = MENU
-                    self.practice_session = None
-                    self.practice_message = ""
-                elif self.declaring_moves:
-                    self.declaring_moves = False
+                elif self.state in (PLAYING, PRACTICE, ROUND_END):
+                    if self.declaring_moves:
+                        self.declaring_moves = False
+                    else:
+                        self._abandon_to_menu()
                 else:
                     return False
 
@@ -258,6 +266,8 @@ class GameWindow:
                             self.declaring_moves = True
                             self.declare_input_str = ""
                             sounds.play(sounds.SOUND_BUTTON_CLICK)
+                        elif bid == ui.BTN_ABANDON:
+                            self._abandon_to_menu()
 
         elif self.state == PRACTICE and self.practice_session and self.game:
             actions = self.input_handler.process_events(events, self.game.robots)
@@ -290,6 +300,8 @@ class GameWindow:
                         self.practice_message = ""
                         self.input_handler.clear_selection()
                         sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_ABANDON:
+                        self._abandon_to_menu()
 
         elif self.state == ROUND_END:
             for e in events:
