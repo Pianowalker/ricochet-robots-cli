@@ -26,6 +26,21 @@ DISPLAY_MAP = {
     "gray": "W"
 }
 
+LETTER_TO_COLOR = {
+    "B": "blue",
+    "Y": "yellow",
+    "G": "green",
+    "R": "red",
+    "W": "gray"
+}
+
+DIRECTION_MAP = {
+    "r": "right",
+    "l": "left",
+    "u": "up",
+    "d": "down"
+}
+
 
 def print_board(game):
     print()
@@ -165,112 +180,95 @@ Rl  → mueve el robot rojo hacia la izquierda
 Bd  → mueve el robot azul hacia abajo
     """)
 
-def main():
+def _select_map_and_difficulty():
+    """Pide al usuario el modo de mapa y la dificultad. Devuelve (mode, easy_mode)."""
     while True:
-        print("\n=== RICOCHET ROBOTS ===")
-        print("1) Jugar")
-        print("2) Ver reglas")
-        print("3) Ver controles")
-        print("4) Salir")
-
-        option = input("Elegí una opción: ").strip()
-
-        if option == "1":
-            break
-        elif option == "2":
-            show_rules()
-        elif option == "3":
-            show_controls()
-        elif option == "4":
-            return
-        else:
-            print("Opción inválida.")
-
-    while True:
-
         print("\nModo de mapa:")
         print("1) Aleatorio")
-        print("2) Sin bumpers (fácil)")
+        print("2) Sin bumpers")
         print("3) Al menos un bumper")
-
         option = input("Elegí modo: ").strip()
-
-        mode_map = {
-            "1": "random",
-            "2": "no_bumpers",
-            "3": "at_least_one_bumper"
-        }
-
+        mode_map = {"1": "random", "2": "no_bumpers", "3": "at_least_one_bumper"}
         if option in mode_map:
             mode = mode_map[option]
             break
-        else:
-            print("Opción inválida.")
+        print("Opción inválida.")
+
     while True:
         print("\nDificultad:")
         print("1) Normal (4 robots)")
         print("2) Fácil  (5 robots, incluye gris)")
         diff = input("Elegí dificultad: ").strip()
         if diff == "1":
-            easy_mode = False
-            break
+            return mode, False
         elif diff == "2":
-            easy_mode = True
-            break
-        else:
-            print("Opción inválida.")
+            return mode, True
+        print("Opción inválida.")
 
+
+def _setup_game(mode, easy_mode):
+    """Construye el tablero y coloca los robots. Devuelve el Game listo."""
     game = build_random_board(mode=mode)
     colors = ["blue", "yellow", "green", "red"]
     if easy_mode:
         colors = colors + ["gray"]
     game.place_robots_randomly(colors)
+    return game
 
+
+def _parse_command(command):
+    """Parsea un comando de movimiento. Devuelve (robot_color, direction) o lanza ValueError."""
+    command = command.strip()
+    if len(command) != 2:
+        raise ValueError("Formato inválido. Usá por ejemplo: Rl o Bd")
+    robot_letter = command[0].upper()
+    direction_letter = command[1].lower()
+    if robot_letter not in LETTER_TO_COLOR:
+        raise ValueError("Robot inválido.")
+    if direction_letter not in DIRECTION_MAP:
+        raise ValueError("Dirección inválida.")
+    return LETTER_TO_COLOR[robot_letter], DIRECTION_MAP[direction_letter]
+
+
+def play_match(game):
+    """Flujo completo de una partida con rondas y score."""
     max_rounds = len(game.targets)
 
     while True:
         try:
             chosen = int(input(f"¿Cuántas rondas? (1–{max_rounds}): "))
-
             if 1 <= chosen <= max_rounds:
                 break
-            else:
-                print("Número fuera de rango.")
-
+            print("Número fuera de rango.")
         except ValueError:
             print("Ingresá un número válido.")
+
     session = SinglePlayerSession(game, total_rounds=chosen)
 
     while True:
-
         started = session.start_new_round()
 
-        target = session.game.active_target
+        if not started:
+            print("\nPartida terminada.")
+            print("Score final:", session.score)
+            if session.score > 0:
+                print("Resultado: Victoria")
+            elif session.score < 0:
+                print("Resultado: Derrota")
+            else:
+                print("Resultado: Empate")
+            break
 
+        target = session.game.active_target
+        print(f"\n=== Ronda {session.current_round}/{session.total_rounds} ===")
+        print("Score actual:", session.score)
         if target.color is None:
             print("Objetivo: COMODÍN (*)")
         else:
             print(f"Objetivo: {target.color.lower()}")
 
-        if not started:
-            print("\nPartida terminada.")
-            print("Score final:", session.score)
-
-            if session.score > 0:
-                print("Resultado: Victoria 🎉")
-            elif session.score < 0:
-                print("Resultado: Derrota 😞")
-            else:
-                print("Resultado: Empate 🤝")
-
-            break
-
-        print(f"\n=== Ronda {session.current_round}/{session.total_rounds} ===")
-        print("Score actual:", session.score)
-
         print_board(game)
 
-        # Declaración
         while True:
             try:
                 declared = int(input("¿Cuántas movidas? "))
@@ -282,68 +280,108 @@ def main():
             except ValueError:
                 print("Ingresá un número entero válido.")
 
-        # Movimientos
         while session.round_active:
-
             print_board(game)
-
             current_move = session.move_count + 1
             total_moves = session.declared_moves
-
-            if session.move_count == 0:
-                prompt = f"Movimiento {current_move}/{total_moves} (ej: Rl): "
-            else:
-                prompt = f"Movimiento {current_move}/{total_moves}: "
-
+            prompt = f"Movimiento {current_move}/{total_moves} (ej: Rl): "
             command = input(prompt).strip()
-
             try:
-                command = command.strip()
-
-                if len(command) != 2:
-                    print("Formato inválido. Usá por ejemplo: Rl o Bd")
+                robot_color, direction = _parse_command(command)
+                if robot_color not in game.robots:
+                    print("Ese robot no está en el tablero.")
                     continue
-
-                robot_letter = command[0].upper()
-                direction_letter = command[1].lower()
-
-                LETTER_TO_COLOR = {
-                    "B": "blue",
-                    "Y": "yellow",
-                    "G": "green",
-                    "R": "red",
-                    "W": "gray"
-                }
-
-                if robot_letter not in LETTER_TO_COLOR:
-                    print("Robot inválido.")
-                    continue
-
-                robot_color = LETTER_TO_COLOR[robot_letter]
-
-                if direction_letter not in ["l", "r", "u", "d"]:
-                    print("Dirección inválida.")
-                    continue
-
-                direction_map = {
-                    "r": "right",
-                    "l": "left",
-                    "u": "up",
-                    "d": "down"
-                }
-
-                direction = direction_map[direction_letter]
-
-                position, won, message, _ = session.move(robot_color, direction)
-
+                _, _, message, _ = session.move(robot_color, direction)
                 print(message)
-                print_board(game)
-
+            except ValueError as e:
+                print(e)
             except Exception as e:
                 print("Error:", e)
 
         print("Fin de ronda.")
         print("Score actual:", session.score)
+
+
+def play_practice(game):
+    """Flujo del modo práctica: movimiento libre sin rondas ni score."""
+    from ricochet.domain.sessions.practice_session import PracticeSession
+    session = PracticeSession(game)
+    session.start_puzzle()
+
+    while True:
+        target = game.active_target
+        print("\n=== MODO PRÁCTICA ===")
+        if target.color is None:
+            print("Objetivo: COMODÍN (*)")
+        else:
+            print(f"Objetivo: {target.color.lower()}")
+        print(f"Movidas: {session.move_count}")
+        print_board(game)
+
+        while session.round_active:
+            command = input(f"Movida {session.move_count + 1} (ej: Rl) o 'q' para salir: ").strip()
+            if command.lower() == "q":
+                return
+            try:
+                robot_color, direction = _parse_command(command)
+                if robot_color not in game.robots:
+                    print("Ese robot no está en el tablero.")
+                    continue
+                _, won, message, _ = session.move(robot_color, direction)
+                print_board(game)
+                if message:
+                    print(message)
+                if won:
+                    print(f"Objetivo alcanzado en {session.move_count} movidas!")
+            except ValueError as e:
+                print(e)
+            except Exception as e:
+                print("Error:", e)
+
+        while True:
+            print("\n1) Siguiente puzzle")
+            print("2) Reiniciar puzzle")
+            print("3) Salir")
+            opt = input("Opción: ").strip()
+            if opt == "1":
+                session.start_puzzle()
+                break
+            elif opt == "2":
+                session.reset_puzzle()
+                break
+            elif opt == "3":
+                return
+            else:
+                print("Opción inválida.")
+
+
+def main():
+    while True:
+        print("\n=== RICOCHET ROBOTS ===")
+        print("1) Jugar partida")
+        print("2) Modo práctica")
+        print("3) Ver reglas")
+        print("4) Ver controles")
+        print("5) Salir")
+
+        option = input("Elegí una opción: ").strip()
+
+        if option == "1":
+            mode, easy_mode = _select_map_and_difficulty()
+            game = _setup_game(mode, easy_mode)
+            play_match(game)
+        elif option == "2":
+            mode, easy_mode = _select_map_and_difficulty()
+            game = _setup_game(mode, easy_mode)
+            play_practice(game)
+        elif option == "3":
+            show_rules()
+        elif option == "4":
+            show_controls()
+        elif option == "5":
+            return
+        else:
+            print("Opción inválida.")
 
 
 if __name__ == "__main__":
