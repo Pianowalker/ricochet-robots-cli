@@ -184,9 +184,10 @@ class Game:
 
         if self.active_target is not None:
             if robot.position == self.active_target.position:
-                if (self.active_target.color is None or
-                    robot.color == self.active_target.color):
-                    won = True
+                if robot.color != "gray":
+                    if (self.active_target.color is None or
+                            robot.color == self.active_target.color):
+                        won = True
 
         return robot.position, won, False, waypoints  # movimiento legal
             

@@ -1,6 +1,6 @@
 from ricochet.domain.game import Game
 from ricochet.domain.models import Bumper
-from ricochet.domain.sessions import SinglePlayerSession
+from ricochet.domain.sessions.single_player_session import SinglePlayerSession
 
 def test_session_does_not_count_illegal_move():
     game = Game(4, 4)

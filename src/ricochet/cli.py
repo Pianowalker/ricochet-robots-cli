@@ -1,7 +1,7 @@
 from email import message
 
 from ricochet.domain.maps import build_random_board
-from ricochet.domain.sessions import SinglePlayerSession
+from ricochet.domain.sessions.single_player_session import SinglePlayerSession
 import os
 
 # Habilitar ANSI en Windows
@@ -14,6 +14,7 @@ COLORS = {
     "Y": "\033[93m",   # amarillo
     "B": "\033[94m",   # azul
     "*": "\033[95m",   # comodín (magenta)
+    "W": "\033[97m",   # gris (blanco brillante)
     "RESET": "\033[0m"
 }
 
@@ -21,7 +22,8 @@ DISPLAY_MAP = {
     "blue": "B",
     "yellow": "Y",
     "green": "G",
-    "red": "R"
+    "red": "R",
+    "gray": "W"
 }
 
 
@@ -126,10 +128,11 @@ def show_rules():
     print("\n=== REGLAS ===")
     print("""
 - Los robots están representados por letras mayúsculas: B, R, Y, G.
+- En modo fácil se agrega el robot gris (W), que solo sirve de apoyo y nunca es objetivo.
 - Los objetivos están representados por letras minúsculas: b, r, y, g.
 - Debes calcular cuantos movimientos necesitas para que el robot cuya letra sea la misma que la del objetivo llegue a la casilla de este último.
 - Una vez declarado esto, ganas un punto si consigues hacer esto en la cantidad de movimientos declarada.
-- Existe también el objetivo comodín (*) que se puede alcanzar con un robot de cualquier color.
+- Existe también el objetivo comodín (*) que se puede alcanzar con cualquier robot de color (no el gris).
 - Los robots se deslizan hasta chocar con pared, robot o borde.
 - Los resortes (/\) reflejan el movimiento.
 - Están prohibidos los movimientos ilegales, como terminar sobre un resorte o intentar mover un robot que no existe.
@@ -149,6 +152,7 @@ R = Rojo
 B = Azul
 G = Verde
 Y = Amarillo
+W = Gris (solo en modo fácil)
 
 Segunda letra:
 L = izquierda
@@ -202,8 +206,25 @@ def main():
             break
         else:
             print("Opción inválida.")
+    while True:
+        print("\nDificultad:")
+        print("1) Normal (4 robots)")
+        print("2) Fácil  (5 robots, incluye gris)")
+        diff = input("Elegí dificultad: ").strip()
+        if diff == "1":
+            easy_mode = False
+            break
+        elif diff == "2":
+            easy_mode = True
+            break
+        else:
+            print("Opción inválida.")
+
     game = build_random_board(mode=mode)
-    game.place_robots_randomly(["blue", "yellow", "green", "red"])
+    colors = ["blue", "yellow", "green", "red"]
+    if easy_mode:
+        colors = colors + ["gray"]
+    game.place_robots_randomly(colors)
 
     max_rounds = len(game.targets)
 
@@ -290,14 +311,15 @@ def main():
                     "B": "blue",
                     "Y": "yellow",
                     "G": "green",
-                    "R": "red"
+                    "R": "red",
+                    "W": "gray"
                 }
 
-                robot_color = LETTER_TO_COLOR[robot_letter]
-
-                if robot_letter not in ["R", "B", "G", "Y"]:
+                if robot_letter not in LETTER_TO_COLOR:
                     print("Robot inválido.")
                     continue
+
+                robot_color = LETTER_TO_COLOR[robot_letter]
 
                 if direction_letter not in ["l", "r", "u", "d"]:
                     print("Dirección inválida.")

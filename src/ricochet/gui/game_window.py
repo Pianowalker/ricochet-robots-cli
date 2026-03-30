@@ -66,11 +66,15 @@ class GameWindow:
         self.practice_session: PracticeSession | None = None
         self._is_practice_mode: bool = False
         self.practice_message: str = ""
+        self.easy_mode: bool = False
 
     def _start_game(self):
         """Crea Game y Session según el modo elegido."""
         self.game = build_random_board(mode=self.mode)
-        self.game.place_robots_randomly(["red", "green", "blue", "yellow"])
+        colors = ["red", "green", "blue", "yellow"]
+        if self.easy_mode:
+            colors = colors + ["gray"]
+        self.game.place_robots_randomly(colors)
         max_rounds = min(10, len(self.game.targets) if self.game.targets else 10)
         try:
             n = max(1, min(10, int(self.rounds_input_str.strip() or "1")))
@@ -89,7 +93,10 @@ class GameWindow:
     def _start_practice(self):
         """Crea Game y PracticeSession para el modo práctica."""
         self.game = build_random_board(mode=self.mode)
-        self.game.place_robots_randomly(["red", "green", "blue", "yellow"])
+        colors = ["red", "green", "blue", "yellow"]
+        if self.easy_mode:
+            colors = colors + ["gray"]
+        self.game.place_robots_randomly(colors)
         self.session = None
         self.practice_session = PracticeSession(self.game)
         self.practice_session.start_puzzle()
@@ -189,6 +196,9 @@ class GameWindow:
                     elif bid == ui.BTN_MODE_AT_LEAST_ONE:
                         self.mode = "at_least_one_bumper"
                         self._start_practice() if self._is_practice_mode else self._start_game()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_TOGGLE_EASY:
+                        self.easy_mode = not self.easy_mode
                         sounds.play(sounds.SOUND_BUTTON_CLICK)
 
         elif self.state == PLAYING and self.session and self.game:
@@ -353,6 +363,7 @@ class GameWindow:
                 self.screen, self.font, mouse_pos,
                 rounds_input_str=self.rounds_input_str,
                 show_rounds=not self._is_practice_mode,
+                easy_mode=self.easy_mode,
             )
 
         elif self.state == PLAYING and self.game and self.session:
