@@ -59,7 +59,7 @@ pip install -e .
 ### GUI version
 
 ```
-python -m ricochet.gui.main
+python -m ricochet.gui_pygame.main
 ```
 
 ### CLI version
