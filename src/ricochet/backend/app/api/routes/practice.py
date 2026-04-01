@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from ricochet.backend.app.services.practice_service import PracticeService
-from ricochet.backend.app.services.serializer import serialize_game
+from ricochet.backend.app.services.serializer import serialize_game, serialize_session
 from ricochet.backend.app.store import store
 from ricochet.backend.app.schemas.move_request import MoveRequest
 from fastapi import HTTPException
@@ -20,7 +20,7 @@ def create_practice():
 
     return {
         "session_id": session_id,
-        "state": serialize_game(session.game)
+        "state": serialize_session(session)
     }
 
 # Mueve un robot en la sesión de práctica especificada por session_id, utilizando los datos de MoveRequest.
@@ -36,8 +36,10 @@ def move_robot(session_id: str, request: MoveRequest):
 )
     # Devuelve el nuevo estado del juego, si se ha ganado, un mensaje y los waypoints del movimiento.
     return {
-    "state": serialize_game(session.game),
-    "won": won,
-    "message": message,
-    "waypoints": waypoints
-}
+        "event": {
+            "won": won,
+            "message": message,
+            "waypoints": waypoints
+        },
+        "state": serialize_session(session)
+    }

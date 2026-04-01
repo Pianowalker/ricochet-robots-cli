@@ -10,45 +10,46 @@
     body {
       background: #1a1a2e;
       color: #e0e0e0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      padding: 24px 16px;
-      gap: 20px;
+      min-height: 100dvh;
+      padding: 16px 12px 32px;
+      gap: 16px;
     }
 
     h1 {
-      font-size: 1.6rem;
+      font-size: clamp(1rem, 4vw, 1.5rem);
       letter-spacing: 2px;
       color: #a0c4ff;
       text-transform: uppercase;
+      text-align: center;
     }
 
-    /* ── Board ─────────────────────────────────────────────── */
+    /* ── Board ──────────────────────────────────────────────────
+       Square, fills available width on mobile, capped on desktop */
     #board {
       display: grid;
       grid-template-columns: repeat(16, 1fr);
       grid-template-rows: repeat(16, 1fr);
-      width: min(80vw, 576px);
-      height: min(80vw, 576px);
+      width: min(calc(100vw - 24px), 576px);
+      aspect-ratio: 1;
       border: 3px solid #8888aa;
       background: #0d1b2a;
+      flex-shrink: 0;
+      touch-action: none; /* swipe is handled manually */
     }
 
-    /* Borders are managed entirely via JS inline styles */
+    /* Cell borders managed via JS inline styles */
     .cell {
       position: relative;
-      cursor: default;
       background: #0d1b2a;
     }
 
-    .cell.blocked {
-      background: #060e18;
-    }
+    .cell.blocked { background: #060e18; }
 
-    /* ── Target ─────────────────────────────────────────────── */
+    /* ── Target ─────────────────────────────────────────────────*/
     .target-ring {
       position: absolute;
       inset: 14%;
@@ -79,24 +80,28 @@
       z-index: 1;
     }
 
-    /* ── Robot ──────────────────────────────────────────────── */
+    /* ── Robot ──────────────────────────────────────────────────*/
     .robot {
       position: absolute;
-      inset: 10%;
+      inset: 6%;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.25);
+      border: 2px solid rgba(255,255,255,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       font-weight: bold;
       color: rgba(255,255,255,0.9);
       cursor: pointer;
       z-index: 3;
-      transition: box-shadow 0.1s;
+      /* expand tap target to full cell */
+      padding: 0;
+      touch-action: manipulation;
     }
 
-    .robot:hover { filter: brightness(1.2); }
+    @media (hover: hover) {
+      .robot:hover { filter: brightness(1.2); }
+    }
 
     .robot.selected {
       border-color: #fff;
@@ -109,70 +114,164 @@
     .robot[data-color="yellow"] { background: #c0a000; }
     .robot[data-color="gray"]   { background: #606870; }
 
-    /* ── Controls ──────────────────────────────────────────── */
+    /* ── Controls ───────────────────────────────────────────────*/
     #controls {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      width: 100%;
+      max-width: 576px;
+    }
+
+    /* Status row: message + move count */
+    #status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
     }
 
     #message {
-      min-height: 1.5rem;
-      font-size: 1rem;
+      min-height: 1.4rem;
+      font-size: clamp(0.85rem, 3.5vw, 1rem);
       color: #ffdd88;
       text-align: center;
     }
-    #message.won     { color: #80ff80; font-weight: bold; font-size: 1.2rem; }
+    #message.won     { color: #80ff80; font-weight: bold; }
     #message.illegal { color: #ff8080; }
 
+    #move-count {
+      font-size: clamp(0.75rem, 3vw, 0.9rem);
+      color: #8899aa;
+    }
+
+    /* Selected robot indicator */
+    #selected-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+    }
+
+    #selected-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      display: none;
+    }
+
+    #selected-label {
+      font-size: 0.85rem;
+      color: #aabbcc;
+    }
+
+    /* ── Direction buttons ──────────────────────────────────────
+       3×3 grid, centre cell empty. Buttons sized for touch. */
     .dir-grid {
       display: grid;
-      grid-template-columns: repeat(3, 48px);
-      grid-template-rows: repeat(3, 48px);
-      gap: 4px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+      width: min(200px, 55vw);
     }
 
-    .dir-grid button {
-      width: 48px; height: 48px;
-      border: none; border-radius: 8px;
+    .dir-btn {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 12px;
       background: #2a3f5f;
       color: #a0c4ff;
-      font-size: 1.2rem;
+      font-size: clamp(1.1rem, 4.5vw, 1.5rem);
       cursor: pointer;
-      transition: background 0.15s;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s, transform 0.08s;
+      user-select: none;
     }
-    .dir-grid button:hover:not(:disabled) { background: #3a5f8f; }
-    .dir-grid button:disabled { opacity: 0.3; cursor: default; }
-    .dir-grid .empty { background: transparent; pointer-events: none; }
 
-    #btn-new {
-      padding: 10px 28px;
-      border: none; border-radius: 8px;
-      background: #3a5f3a;
-      color: #a0ffa0;
-      font-size: 1rem; cursor: pointer;
-      letter-spacing: 1px;
-      transition: background 0.15s;
+    @media (hover: hover) {
+      .dir-btn:hover:not(:disabled) { background: #3a5f8f; }
     }
-    #btn-new:hover:not(:disabled) { background: #4a7f4a; }
-    #btn-new:disabled { opacity: 0.4; cursor: default; }
 
-    #move-count { font-size: 0.9rem; color: #8899aa; }
+    .dir-btn:active:not(:disabled) {
+      background: #3a5f8f;
+      transform: scale(0.93);
+    }
 
-    /* ── Legend ─────────────────────────────────────────────── */
-    #legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .dir-btn:disabled { opacity: 0.25; cursor: default; }
+    .dir-btn.empty    { background: transparent; pointer-events: none; }
+
+    /* ── Legend (robot selector) ────────────────────────────────*/
+    #legend {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
     .legend-item {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.8rem; color: #8899aa;
-      cursor: pointer; padding: 4px 8px;
-      border-radius: 6px; border: 1px solid transparent;
-      transition: border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: clamp(0.75rem, 3vw, 0.85rem);
+      color: #8899aa;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
     }
-    .legend-item.active { border-color: rgba(255,255,255,0.4); color: #e0e0e0; }
 
-    .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+    .legend-item:active { background: rgba(255,255,255,0.05); }
+
+    .legend-item.active {
+      border-color: rgba(255,255,255,0.45);
+      color: #e0e0e0;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── New Puzzle button ──────────────────────────────────────*/
+    #btn-new {
+      padding: 12px 32px;
+      border: none;
+      border-radius: 10px;
+      background: #2a4f2a;
+      color: #88ee88;
+      font-size: clamp(0.85rem, 3.5vw, 1rem);
+      cursor: pointer;
+      letter-spacing: 1px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, transform 0.08s;
+      user-select: none;
+    }
+
+    @media (hover: hover) {
+      #btn-new:hover:not(:disabled) { background: #3a6f3a; }
+    }
+
+    #btn-new:active:not(:disabled) {
+      background: #3a6f3a;
+      transform: scale(0.96);
+    }
+
+    #btn-new:disabled { opacity: 0.4; cursor: default; }
   </style>
 </head>
 <body>
@@ -182,27 +281,35 @@
 <div id="board"></div>
 
 <div id="controls">
-  <div id="message">Loading...</div>
-  <div id="move-count"></div>
+  <div id="status">
+    <div id="message">Loading...</div>
+    <div id="move-count"></div>
+  </div>
 
-  <div class="dir-grid">
-    <div class="empty"></div>
-    <button id="btn-up"    onclick="doMove('up')">&#8593;</button>
-    <div class="empty"></div>
-    <button id="btn-left"  onclick="doMove('left')">&#8592;</button>
-    <div class="empty"></div>
-    <button id="btn-right" onclick="doMove('right')">&#8594;</button>
-    <div class="empty"></div>
-    <button id="btn-down"  onclick="doMove('down')">&#8595;</button>
-    <div class="empty"></div>
+  <div id="selected-display">
+    <div id="selected-dot"></div>
+    <span id="selected-label">Tap a robot to select</span>
+  </div>
+
+  <div class="dir-grid" role="group" aria-label="Movement controls">
+    <div class="dir-btn empty"></div>
+    <button class="dir-btn" id="btn-up"    aria-label="Move up"    onclick="doMove('up')">&#8593;</button>
+    <div class="dir-btn empty"></div>
+    <button class="dir-btn" id="btn-left"  aria-label="Move left"  onclick="doMove('left')">&#8592;</button>
+    <div class="dir-btn empty"></div>
+    <button class="dir-btn" id="btn-right" aria-label="Move right" onclick="doMove('right')">&#8594;</button>
+    <div class="dir-btn empty"></div>
+    <button class="dir-btn" id="btn-down"  aria-label="Move down"  onclick="doMove('down')">&#8595;</button>
+    <div class="dir-btn empty"></div>
   </div>
 
   <div id="legend"></div>
+
   <button id="btn-new" onclick="newPuzzle()">New Puzzle</button>
 </div>
 
 <script>
-const API = 'http://127.0.0.1:8000';
+const API = 'http://192.168.1.40:8000';
 
 const ROBOT_HEX = {
   red: '#cc2828', blue: '#1a55c0',
@@ -216,22 +323,21 @@ const TARGET_HEX = {
 const BUMPER_HEX = {
   red: '#ff6060', blue: '#5599ff',
   green: '#55dd88', yellow: '#ffe055',
-  gray: '#aaaaaa'
+  gray: '#bbbbbb'
 };
 const ROBOT_LABEL = { red:'R', blue:'B', green:'G', yellow:'Y', gray:'W' };
 
-// Wall border styles
 const WALL_STYLE = '3px solid #c8c8d8';
 const THIN_STYLE = '1px solid #1a3050';
 
-let sessionId = null;
-let state     = null;
-let wallMap   = {};   // "r,c" -> {top,bottom,left,right}
-let animating = false;
+let sessionId    = null;
+let state        = null;
+let wallMap      = {};
+let animating    = false;
 let selectedColor = null;
-let moveCount = 0;
+let moveCount    = 0;
 
-// ── Board construction ───────────────────────────────────────
+// ── Board ────────────────────────────────────────────────────
 
 function cellId(r, c) { return `cell-${r}-${c}`; }
 
@@ -253,17 +359,14 @@ function buildBoard() {
 function buildWallMap(walls) {
   const map = {};
   for (const [a, b] of walls) {
-    const [r1, c1] = a;
-    const [r2, c2] = b;
-    const k1 = `${r1},${c1}`;
-    const k2 = `${r2},${c2}`;
+    const [r1, c1] = a, [r2, c2] = b;
+    const k1 = `${r1},${c1}`, k2 = `${r2},${c2}`;
     if (!map[k1]) map[k1] = {};
     if (!map[k2]) map[k2] = {};
-
     const dr = r2 - r1, dc = c2 - c1;
-    if      (dr ===  1) { map[k1].bottom = true; map[k2].top   = true; }
+    if      (dr ===  1) { map[k1].bottom = true; map[k2].top    = true; }
     else if (dr === -1) { map[k1].top    = true; map[k2].bottom = true; }
-    else if (dc ===  1) { map[k1].right  = true; map[k2].left  = true; }
+    else if (dc ===  1) { map[k1].right  = true; map[k2].left   = true; }
     else                { map[k1].left   = true; map[k2].right  = true; }
   }
   return map;
@@ -272,7 +375,7 @@ function buildWallMap(walls) {
 // ── Full render ──────────────────────────────────────────────
 
 function renderAll(st) {
-  // 1. Reset every cell
+  // 1. Reset cells with wall borders
   for (let r = 0; r < 16; r++) {
     for (let c = 0; c < 16; c++) {
       const cell = document.getElementById(cellId(r, c));
@@ -280,10 +383,10 @@ function renderAll(st) {
       cell.innerHTML = '';
       const w = wallMap[`${r},${c}`] ?? {};
       cell.style.cssText = [
-        `border-top:${w.top       ? WALL_STYLE : THIN_STYLE}`,
+        `border-top:${   w.top    ? WALL_STYLE : THIN_STYLE}`,
         `border-bottom:${w.bottom ? WALL_STYLE : THIN_STYLE}`,
-        `border-left:${w.left     ? WALL_STYLE : THIN_STYLE}`,
-        `border-right:${w.right   ? WALL_STYLE : THIN_STYLE}`,
+        `border-left:${  w.left   ? WALL_STYLE : THIN_STYLE}`,
+        `border-right:${ w.right  ? WALL_STYLE : THIN_STYLE}`,
         'background:#0d1b2a',
       ].join(';');
     }
@@ -291,38 +394,32 @@ function renderAll(st) {
 
   // 2. Blocked cells
   for (const [r, c] of (st.blocked_cells ?? [])) {
-    const cell = document.getElementById(cellId(r, c));
-    cell.style.background = '#060e18';
+    document.getElementById(cellId(r, c)).style.background = '#060e18';
   }
 
-  // 3. Bumpers — SVG diagonal line
+  // 3. Bumpers
   for (const b of (st.bumpers ?? [])) {
     const [r, c] = b.position;
-    const cell = document.getElementById(cellId(r, c));
+    const cell   = document.getElementById(cellId(r, c));
     const stroke = BUMPER_HEX[b.color] ?? '#aaaaaa';
-    // '/' → bottom-left to top-right; '\' → top-left to bottom-right
-    const [x1, y1, x2, y2] = b.diagonal === '/'
-      ? [5, 95, 95, 5]
-      : [5,  5, 95, 95];
+    const [x1, y1, x2, y2] = b.diagonal === '/' ? [5,95,95,5] : [5,5,95,95];
     cell.insertAdjacentHTML('beforeend',
       `<svg viewBox="0 0 100 100" preserveAspectRatio="none"
             style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1">
         <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
               stroke="${stroke}" stroke-width="12" stroke-linecap="round"/>
-      </svg>`
-    );
+      </svg>`);
   }
 
   // 4. Target
   if (st.target) {
     const [tr, tc] = st.target.position;
     const cell = document.getElementById(cellId(tr, tc));
-    const hex = TARGET_HEX[st.target.color ?? 'wildcard'] ?? '#ffffff';
+    const hex  = TARGET_HEX[st.target.color ?? 'wildcard'] ?? '#ffffff';
     cell.insertAdjacentHTML('beforeend',
-      `<div class="target-ring"  style="--tc:${hex}"></div>
+      `<div class="target-ring"    style="--tc:${hex}"></div>
        <div class="target-cross-h" style="--tc:${hex}"></div>
-       <div class="target-cross-v" style="--tc:${hex}"></div>`
-    );
+       <div class="target-cross-v" style="--tc:${hex}"></div>`);
   }
 
   // 5. Robots
@@ -336,10 +433,10 @@ function renderAll(st) {
 
 function placeRobotEl(color, r, c) {
   const cell = document.getElementById(cellId(r, c));
-  const div = document.createElement('div');
-  div.className = 'robot' + (color === selectedColor ? ' selected' : '');
+  const div  = document.createElement('div');
+  div.className   = 'robot' + (color === selectedColor ? ' selected' : '');
   div.dataset.color = color;
-  div.title = color;
+  div.title       = color;
   div.textContent = ROBOT_LABEL[color] ?? color[0].toUpperCase();
   div.onclick = e => { e.stopPropagation(); selectRobot(color); };
   cell.appendChild(div);
@@ -351,14 +448,27 @@ function placeRobotEl(color, r, c) {
 function selectRobot(color) {
   if (animating) return;
   selectedColor = color;
-  // Refresh selected highlight without full re-render
-  document.querySelectorAll('.robot').forEach(el => {
-    el.classList.toggle('selected', el.dataset.color === color);
-  });
-  document.querySelectorAll('.legend-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.color === color);
-  });
-  setMessage(`${color} robot selected`);
+
+  document.querySelectorAll('.robot').forEach(el =>
+    el.classList.toggle('selected', el.dataset.color === color));
+  document.querySelectorAll('.legend-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.color === color));
+
+  // Update indicator
+  const dot   = document.getElementById('selected-dot');
+  const label = document.getElementById('selected-label');
+  dot.style.display    = 'block';
+  dot.style.background = ROBOT_HEX[color] ?? '#888';
+  label.textContent    = color.charAt(0).toUpperCase() + color.slice(1) + ' selected';
+
+  setMessage('Choose a direction');
+  updateButtons();
+}
+
+function clearSelection() {
+  selectedColor = null;
+  document.getElementById('selected-dot').style.display = 'none';
+  document.getElementById('selected-label').textContent = 'Tap a robot to select';
   updateButtons();
 }
 
@@ -369,51 +479,49 @@ function updateLegend(robots) {
   legend.innerHTML = '';
   for (const color of Object.keys(robots)) {
     const item = document.createElement('div');
-    item.className = 'legend-item' + (color === selectedColor ? ' active' : '');
+    item.className    = 'legend-item' + (color === selectedColor ? ' active' : '');
     item.dataset.color = color;
     item.onclick = () => selectRobot(color);
     const dot = document.createElement('div');
     dot.className = 'legend-dot';
     dot.style.background = ROBOT_HEX[color] ?? '#888';
     item.appendChild(dot);
-    item.appendChild(document.createTextNode(color));
+    item.appendChild(document.createTextNode(
+      color.charAt(0).toUpperCase() + color.slice(1)
+    ));
     legend.appendChild(item);
   }
 }
 
 function updateButtons() {
   const off = !selectedColor || animating;
-  ['btn-up','btn-down','btn-left','btn-right'].forEach(id => {
-    document.getElementById(id).disabled = off;
-  });
+  ['btn-up','btn-down','btn-left','btn-right'].forEach(id =>
+    document.getElementById(id).disabled = off);
 }
 
 function setMessage(text, cls = '') {
   const el = document.getElementById('message');
   el.textContent = text;
-  el.className = cls;
+  el.className   = cls;
 }
 
 function setMoveCount(n) {
   document.getElementById('move-count').textContent = n > 0 ? `Moves: ${n}` : '';
 }
 
-// ── Waypoint animation ───────────────────────────────────────
+// ── Animation ────────────────────────────────────────────────
 
 async function animateWaypoints(color, waypoints) {
   if (!waypoints || waypoints.length < 2) return;
-  const STEP_MS = 75;
+  const STEP_MS = 70;
 
-  // Remove robot from start
   const [sr, sc] = waypoints[0];
   document.getElementById(cellId(sr, sc)).querySelector('.robot')?.remove();
 
   for (let i = 1; i < waypoints.length; i++) {
     const [pr, pc] = waypoints[i - 1];
     document.getElementById(cellId(pr, pc)).querySelector('.robot')?.remove();
-
-    const [r, c] = waypoints[i];
-    placeRobotEl(color, r, c);
+    placeRobotEl(color, waypoints[i][0], waypoints[i][1]);
     await new Promise(res => setTimeout(res, STEP_MS));
   }
 }
@@ -422,22 +530,22 @@ async function animateWaypoints(color, waypoints) {
 
 async function newPuzzle() {
   document.getElementById('btn-new').disabled = true;
-  selectedColor = null;
   moveCount = 0;
-  setMessage('Loading...');
   setMoveCount(0);
+  setMessage('Loading...');
+  clearSelection();
 
   try {
     const res = await fetch(`${API}/practice`, { method: 'POST' });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
     sessionId = data.session_id;
-    state = data.state;
-    wallMap = buildWallMap(state.walls ?? []);
+    state     = data.state.game;
+    wallMap   = buildWallMap(state.walls ?? []);
     buildBoard();
     renderAll(state);
     const tc = state.target?.color ?? 'wildcard';
-    setMessage(`Target: ${tc} — select a robot and move!`);
+    setMessage(`Target: ${tc.charAt(0).toUpperCase() + tc.slice(1)}`);
   } catch (err) {
     setMessage(`Error: ${err.message}`, 'illegal');
   } finally {
@@ -459,26 +567,25 @@ async function doMove(direction) {
     });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
+    const event = data.event ?? {};
 
-    const waypoints = data.waypoints ?? [];
-    const moved = waypoints.length > 1;
+    const waypoints = event.waypoints ?? [];
+    const moved     = waypoints.length > 1;
 
     if (!moved) {
-      setMessage(data.message || 'Illegal move', 'illegal');
+      setMessage(event.message || 'Cannot move that way', 'illegal');
     } else {
       await animateWaypoints(selectedColor, waypoints);
-      state = data.state;
+      state = data.state.game;
       moveCount++;
       setMoveCount(moveCount);
-      // Re-render everything so bumpers/walls stay correct after full state update
       renderAll(state);
 
-      if (data.won) {
+      if (event.won) {
         setMessage(`Solved in ${moveCount} move${moveCount !== 1 ? 's' : ''}!`, 'won');
-        selectedColor = null;
-        updateButtons();
+        clearSelection();
       } else {
-        setMessage(`${selectedColor} moved ${direction}`);
+        setMessage('Choose a direction');
       }
     }
   } catch (err) {
@@ -488,6 +595,30 @@ async function doMove(direction) {
     updateButtons();
   }
 }
+
+// ── Swipe ────────────────────────────────────────────────────
+
+(function attachSwipe() {
+  const board = document.getElementById('board');
+  let sx = 0, sy = 0;
+  const THRESH = 30;
+
+  board.addEventListener('touchstart', e => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  }, { passive: true });
+
+  board.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      doMove(dx > 0 ? 'right' : 'left');
+    } else {
+      doMove(dy > 0 ? 'down' : 'up');
+    }
+  }, { passive: true });
+})();
 
 // ── Keyboard ─────────────────────────────────────────────────
 
