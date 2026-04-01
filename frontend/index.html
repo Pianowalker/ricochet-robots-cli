@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ricochet Robots</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+      gap: 20px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      color: #a0c4ff;
+      text-transform: uppercase;
+    }
+
+    /* ── Board ─────────────────────────────────────────────── */
+    #board-wrap {
+      position: relative;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      grid-template-rows: repeat(16, 1fr);
+      width: min(80vw, 560px);
+      height: min(80vw, 560px);
+      border: 2px solid #555;
+      background: #0d1b2a;
+    }
+
+    .cell {
+      position: relative;
+      border: 1px solid #1e3a5f;
+      cursor: default;
+    }
+
+    /* Target */
+    .cell.target::before {
+      content: '';
+      position: absolute;
+      inset: 15%;
+      border-radius: 50%;
+      border: 3px solid var(--target-color, #fff);
+      opacity: 0.8;
+    }
+    .cell.target::after {
+      content: '';
+      position: absolute;
+      inset: 30%;
+      background: var(--target-color, #fff);
+      clip-path: polygon(50% 0%, 58% 40%, 100% 40%, 70% 60%, 80% 100%, 50% 75%, 20% 100%, 30% 60%, 0% 40%, 42% 40%);
+      opacity: 0.9;
+    }
+
+    /* Robot */
+    .robot {
+      position: absolute;
+      inset: 10%;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: bold;
+      color: rgba(255,255,255,0.9);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      z-index: 2;
+    }
+
+    .robot:hover { transform: scale(1.1); }
+
+    .robot.selected {
+      border-color: #fff;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.6);
+      transform: scale(1.12);
+    }
+
+    /* Robot colors */
+    .robot[data-color="red"]    { background: #e03030; }
+    .robot[data-color="blue"]   { background: #2060d0; }
+    .robot[data-color="green"]  { background: #20a050; }
+    .robot[data-color="yellow"] { background: #d0b000; }
+    .robot[data-color="gray"]   { background: #707880; }
+
+    /* Animating robot moves instantly (JS handles waypoint timing) */
+
+    /* ── Controls ──────────────────────────────────────────── */
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #message {
+      min-height: 1.5rem;
+      font-size: 1rem;
+      color: #ffdd88;
+      text-align: center;
+    }
+
+    #message.won { color: #80ff80; font-weight: bold; font-size: 1.2rem; }
+    #message.illegal { color: #ff8080; }
+
+    .dir-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(3, 48px);
+      gap: 4px;
+    }
+
+    .dir-grid button {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+      background: #2a3f5f;
+      color: #a0c4ff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .dir-grid button:hover:not(:disabled) { background: #3a5f8f; }
+    .dir-grid button:disabled { opacity: 0.3; cursor: default; }
+    .dir-grid .empty { background: transparent; pointer-events: none; }
+
+    #btn-new {
+      padding: 10px 28px;
+      border: none;
+      border-radius: 8px;
+      background: #3a5f3a;
+      color: #a0ffa0;
+      font-size: 1rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s;
+    }
+    #btn-new:hover:not(:disabled) { background: #4a7f4a; }
+    #btn-new:disabled { opacity: 0.4; cursor: default; }
+
+    #move-count {
+      font-size: 0.9rem;
+      color: #8899aa;
+    }
+
+    /* ── Color legend ──────────────────────────────────────── */
+    #legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #8899aa;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+
+    .legend-item.selected-legend {
+      border-color: rgba(255,255,255,0.4);
+      color: #e0e0e0;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Ricochet Robots</h1>
+
+<div id="board-wrap">
+  <div id="board"></div>
+</div>
+
+<div id="controls">
+  <div id="message">Loading...</div>
+  <div id="move-count"></div>
+
+  <div class="dir-grid">
+    <div class="empty"></div>
+    <button id="btn-up"    title="Up"    onclick="move('up')">&#8593;</button>
+    <div class="empty"></div>
+    <button id="btn-left"  title="Left"  onclick="move('left')">&#8592;</button>
+    <div class="empty"></div>
+    <button id="btn-right" title="Right" onclick="move('right')">&#8594;</button>
+    <div class="empty"></div>
+    <button id="btn-down"  title="Down"  onclick="move('down')">&#8595;</button>
+    <div class="empty"></div>
+  </div>
+
+  <div id="legend"></div>
+
+  <button id="btn-new" onclick="newPuzzle()">New Puzzle</button>
+</div>
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+
+  const ROBOT_COLORS = {
+    red: '#e03030', blue: '#2060d0',
+    green: '#20a050', yellow: '#d0b000', gray: '#707880'
+  };
+
+  const TARGET_COLORS = {
+    red: '#ff5555', blue: '#4488ff',
+    green: '#44cc77', yellow: '#ffdd33', gray: '#aaaaaa',
+    null: '#ffffff'
+  };
+
+  const ROBOT_LABELS = {
+    red: 'R', blue: 'B', green: 'G', yellow: 'Y', gray: 'W'
+  };
+
+  let sessionId = null;
+  let state = null;
+  let selectedColor = null;
+  let moveCount = 0;
+  let animating = false;
+
+  // ── DOM helpers ──────────────────────────────────────────
+
+  function cellId(row, col) { return `cell-${row}-${col}`; }
+
+  function buildBoard() {
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+    for (let r = 0; r < 16; r++) {
+      for (let c = 0; c < 16; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.id = cellId(r, c);
+        board.appendChild(cell);
+      }
+    }
+  }
+
+  function renderState(st) {
+    // Clear previous robots and targets
+    document.querySelectorAll('.cell').forEach(el => {
+      el.className = 'cell';
+      el.style.removeProperty('--target-color');
+      el.innerHTML = '';
+    });
+
+    // Draw target
+    if (st.target) {
+      const [tr, tc] = st.target.position;
+      const cell = document.getElementById(cellId(tr, tc));
+      cell.classList.add('target');
+      const color = TARGET_COLORS[String(st.target.color)] ?? '#ffffff';
+      cell.style.setProperty('--target-color', color);
+    }
+
+    // Draw robots
+    for (const [color, pos] of Object.entries(st.robots)) {
+      const [rr, rc] = pos;
+      const cell = document.getElementById(cellId(rr, rc));
+      const dot = document.createElement('div');
+      dot.className = 'robot' + (color === selectedColor ? ' selected' : '');
+      dot.dataset.color = color;
+      dot.title = color;
+      dot.textContent = ROBOT_LABELS[color] ?? color[0].toUpperCase();
+      dot.onclick = (e) => { e.stopPropagation(); selectRobot(color); };
+      cell.appendChild(dot);
+    }
+
+    updateLegend(st.robots);
+    updateDirButtons();
+  }
+
+  function updateLegend(robots) {
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '';
+    for (const color of Object.keys(robots)) {
+      const item = document.createElement('div');
+      item.className = 'legend-item' + (color === selectedColor ? ' selected-legend' : '');
+      item.onclick = () => selectRobot(color);
+      const dot = document.createElement('div');
+      dot.className = 'legend-dot';
+      dot.style.background = ROBOT_COLORS[color] ?? '#888';
+      item.appendChild(dot);
+      item.appendChild(document.createTextNode(color));
+      legend.appendChild(item);
+    }
+  }
+
+  function updateDirButtons() {
+    const disabled = !selectedColor || animating;
+    ['btn-up','btn-down','btn-left','btn-right'].forEach(id => {
+      document.getElementById(id).disabled = disabled;
+    });
+  }
+
+  function setMessage(text, cls = '') {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = cls;
+  }
+
+  function setMoveCount(n) {
+    document.getElementById('move-count').textContent = n > 0 ? `Moves: ${n}` : '';
+  }
+
+  // ── Selection ────────────────────────────────────────────
+
+  function selectRobot(color) {
+    if (animating) return;
+    selectedColor = color;
+    renderState(state);
+    setMessage(`${color} robot selected`);
+    updateDirButtons();
+  }
+
+  // ── Animation ────────────────────────────────────────────
+
+  async function animateWaypoints(color, waypoints) {
+    if (!waypoints || waypoints.length < 2) return;
+    const STEP_MS = 80;
+
+    // Remove robot from its current cell visually
+    const [startR, startC] = waypoints[0];
+    const startCell = document.getElementById(cellId(startR, startC));
+    const robotEl = startCell.querySelector('.robot');
+    if (robotEl) robotEl.remove();
+
+    for (let i = 1; i < waypoints.length; i++) {
+      const [r, c] = waypoints[i];
+      // Place robot at new cell
+      const prev = waypoints[i - 1];
+      const prevCell = document.getElementById(cellId(prev[0], prev[1]));
+      const prevEl = prevCell.querySelector('.robot');
+      if (prevEl) prevEl.remove();
+
+      const cell = document.getElementById(cellId(r, c));
+      const dot = document.createElement('div');
+      dot.className = 'robot' + (color === selectedColor ? ' selected' : '');
+      dot.dataset.color = color;
+      dot.textContent = ROBOT_LABELS[color] ?? color[0].toUpperCase();
+      cell.appendChild(dot);
+
+      await new Promise(res => setTimeout(res, STEP_MS));
+    }
+  }
+
+  // ── API calls ────────────────────────────────────────────
+
+  async function newPuzzle() {
+    document.getElementById('btn-new').disabled = true;
+    selectedColor = null;
+    moveCount = 0;
+    setMessage('Starting new puzzle...');
+    setMoveCount(0);
+
+    try {
+      const res = await fetch(`${API}/practice`, { method: 'POST' });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      sessionId = data.session_id;
+      state = data.state;
+      buildBoard();
+      renderState(state);
+      const targetColor = state.target?.color ?? 'wildcard';
+      setMessage(`Target: ${targetColor} — select a robot and move!`);
+    } catch (err) {
+      setMessage(`Error: ${err.message}`, 'illegal');
+    } finally {
+      document.getElementById('btn-new').disabled = false;
+      updateDirButtons();
+    }
+  }
+
+  async function move(direction) {
+    if (!selectedColor || !sessionId || animating) return;
+
+    animating = true;
+    updateDirButtons();
+
+    try {
+      const res = await fetch(`${API}/practice/${sessionId}/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color: selectedColor, direction })
+      });
+
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+
+      // Check if robot actually moved (waypoints has >1 entry and didn't return illegal)
+      const waypoints = data.waypoints ?? [];
+      const moved = waypoints.length > 1;
+      const illegal = data.message && !moved;
+
+      if (illegal) {
+        setMessage(data.message || 'Illegal move', 'illegal');
+      } else {
+        // Animate
+        await animateWaypoints(selectedColor, waypoints);
+        state = data.state;
+        moveCount++;
+        setMoveCount(moveCount);
+        renderState(state);
+
+        if (data.won) {
+          setMessage(`Solved in ${moveCount} move${moveCount !== 1 ? 's' : ''}!`, 'won');
+          selectedColor = null;
+        } else {
+          setMessage(data.message || `${selectedColor} moved ${direction}`);
+        }
+      }
+    } catch (err) {
+      setMessage(`Error: ${err.message}`, 'illegal');
+    } finally {
+      animating = false;
+      updateDirButtons();
+    }
+  }
+
+  // ── Keyboard support ─────────────────────────────────────
+
+  const KEY_TO_COLOR = {
+    'r': 'red', 'b': 'blue', 'g': 'green', 'y': 'yellow', 'w': 'gray'
+  };
+
+  const KEY_TO_DIR = {
+    'ArrowUp': 'up', 'ArrowDown': 'down',
+    'ArrowLeft': 'left', 'ArrowRight': 'right'
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key in KEY_TO_DIR) {
+      e.preventDefault();
+      move(KEY_TO_DIR[e.key]);
+    } else if (e.key.toLowerCase() in KEY_TO_COLOR && state) {
+      const color = KEY_TO_COLOR[e.key.toLowerCase()];
+      if (state.robots[color]) selectRobot(color);
+    }
+  });
+
+  // ── Init ─────────────────────────────────────────────────
+  buildBoard();
+  newPuzzle();
+</script>
+</body>
+</html>
