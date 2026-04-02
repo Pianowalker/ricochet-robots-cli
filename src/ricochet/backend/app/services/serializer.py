@@ -39,5 +39,6 @@ def serialize_session(session):
             "score": getattr(session, "score", None),
             "round_active": session.round_active,
             "declared_moves": getattr(session, "declared_moves", None),
+            "is_game_over": session.current_round >= session.total_rounds and not session.round_active
         }
     }
