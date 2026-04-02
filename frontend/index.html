@@ -619,9 +619,14 @@ function updateGameInfo() {
 function updateTopBar(message) {
   const bar = document.getElementById('top-bar');
   const parts = [];
-  if (meta?.current_round != null) parts.push(`Round: ${meta.current_round}`);
-  if (meta?.score        != null) parts.push(`Score: ${meta.score}`);
-  if (message)                     parts.push(message);
+  if (currentMode === 'practice') {
+    const tc = state?.target?.color ?? 'wildcard';
+    parts.push(`Target: ${capitalize(tc)}`);
+  } else {
+    if (meta?.current_round != null) parts.push(`Round: ${meta.current_round}`);
+    if (meta?.score        != null) parts.push(`Score: ${meta.score}`);
+  }
+  if (message) parts.push(message);
   bar.textContent = parts.join('  ·  ');
 }
 
@@ -668,7 +673,7 @@ async function newPuzzle() {
     wallMap   = buildWallMap(state.walls ?? []);
     buildBoard();
     renderAll(state);
-    setMessage(`Target: ${capitalize(state.target?.color ?? 'wildcard')}`);
+    updateTopBar();
   } catch (err) {
     setMessage(`Error: ${err.message}`, 'illegal');
   } finally {
