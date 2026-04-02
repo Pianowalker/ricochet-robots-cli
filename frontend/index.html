@@ -594,15 +594,27 @@ function updateButtons() {
   let canMove = !!selectedColor && !animating;
 
   if (currentMode === 'game' && meta) {
-    // In game mode, can only move after declaring
-    canMove = canMove && !!meta.round_active && meta.declared_moves !== null;
+    const roundActive   = !!meta.round_active;
+    const declared      = meta.declared_moves !== null;
+    const gameOver      = !!meta.is_game_over;
 
-    const btnStart = document.getElementById('btn-start-round');
-    btnStart.disabled = !!meta.round_active || !!meta.is_game_over;
+    // STATE 5: game over — hide everything
+    // STATE 1 & 4: no round active — show only Start Round
+    // STATE 2: round active, not declared — show only declare row
+    // STATE 3: declared — show only movement + robot selector
 
-    const canDeclare = !!meta.round_active && meta.declared_moves === null;
-    document.getElementById('btn-declare').disabled     = !canDeclare;
-    document.getElementById('declare-input').disabled   = !canDeclare;
+    const showStart    = !roundActive && !gameOver;   // STATE 1 & 4
+    const showDeclare  = roundActive  && !declared;   // STATE 2
+    const showMove     = roundActive  &&  declared;   // STATE 3
+
+    document.getElementById('btn-start-round').hidden = !showStart;
+    document.getElementById('declare-row').hidden     = !showDeclare;
+    document.getElementById('selected-display').hidden = !showMove;
+    document.querySelector('.dir-grid').hidden         = !showMove;
+    document.getElementById('legend').hidden           = !showMove;
+
+    // In game mode, movement also requires a robot selected
+    canMove = canMove && showMove;
   }
 
   ['btn-up','btn-down','btn-left','btn-right'].forEach(id =>
@@ -626,9 +638,15 @@ function updateTopBar(message) {
   if (currentMode === 'practice') {
     const tc = state?.target?.color ?? 'wildcard';
     parts.push(`Target: ${capitalize(tc)}`);
+    if (moveCount > 0) parts.push(`Moves: ${moveCount}`);
   } else {
     if (meta?.current_round != null) parts.push(`Round: ${meta.current_round}`);
     if (meta?.score        != null) parts.push(`Score: ${meta.score}`);
+  }
+  if (meta?.move_count != null) {
+    parts.push(meta.declared_moves != null
+      ? `Moves: ${meta.move_count} / ${meta.declared_moves}`
+      : `Moves: ${meta.move_count}`);
   }
   if (message) parts.push(message);
   bar.textContent = parts.join('  ·  ');
@@ -655,8 +673,12 @@ async function animateWaypoints(color, waypoints) {
 
 async function enterPractice() {
   currentMode = 'practice';
-  document.getElementById('practice-controls').hidden = false;
-  document.getElementById('game-controls').hidden     = true;
+  document.getElementById('practice-controls').hidden  = false;
+  document.getElementById('game-controls').hidden      = true;
+  // Ensure shared movement UI is always visible in practice mode
+  document.getElementById('selected-display').hidden   = false;
+  document.querySelector('.dir-grid').hidden            = false;
+  document.getElementById('legend').hidden              = false;
   showScreen('board');
   await newPuzzle();
 }
@@ -753,7 +775,7 @@ async function declare() {
     meta  = data.state.meta;
     const ev = data.event ?? {};
     input.value = '';
-    setMessage(ev.message || `Declared ${moves} — now move the robot!`);
+    setMessage(ev.message || `Move the robot!`);
   } catch (err) {
     setMessage(`Error: ${err.message}`, 'illegal');
   }
