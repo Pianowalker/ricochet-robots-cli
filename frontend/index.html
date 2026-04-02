@@ -27,8 +27,42 @@
       text-align: center;
     }
 
-    /* ── Board ──────────────────────────────────────────────────
-       Square, fills available width on mobile, capped on desktop */
+    /* ── Home screen ────────────────────────────────────────────*/
+    #screen-home {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .mode-btn {
+      padding: 16px 48px;
+      border: none;
+      border-radius: 12px;
+      font-size: clamp(1rem, 4vw, 1.15rem);
+      cursor: pointer;
+      letter-spacing: 1px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: filter 0.15s, transform 0.08s;
+      user-select: none;
+    }
+    .mode-btn:active { transform: scale(0.96); }
+
+    #btn-enter-practice { background: #2a4f2a; color: #88ee88; }
+    #btn-enter-game     { background: #2a3f6f; color: #88aaff; }
+
+    /* ── Board screen ───────────────────────────────────────────*/
+    #screen-board {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    /* ── Board ──────────────────────────────────────────────────*/
     #board {
       display: grid;
       grid-template-columns: repeat(16, 1fr);
@@ -38,10 +72,9 @@
       border: 3px solid #8888aa;
       background: #0d1b2a;
       flex-shrink: 0;
-      touch-action: none; /* swipe is handled manually */
+      touch-action: none;
     }
 
-    /* Cell borders managed via JS inline styles */
     .cell {
       position: relative;
       background: #0d1b2a;
@@ -94,7 +127,6 @@
       color: rgba(255,255,255,0.9);
       cursor: pointer;
       z-index: 3;
-      /* expand tap target to full cell */
       padding: 0;
       touch-action: manipulation;
     }
@@ -114,7 +146,7 @@
     .robot[data-color="yellow"] { background: #c0a000; }
     .robot[data-color="gray"]   { background: #606870; }
 
-    /* ── Controls ───────────────────────────────────────────────*/
+    /* ── Controls panel ─────────────────────────────────────────*/
     #controls {
       display: flex;
       flex-direction: column;
@@ -124,7 +156,15 @@
       max-width: 576px;
     }
 
-    /* Status row: message + move count */
+    /* Game info: round + score */
+    #game-info {
+      display: flex;
+      gap: 24px;
+      font-size: clamp(0.8rem, 3vw, 0.95rem);
+      color: #aabbcc;
+    }
+
+    /* Status: message + move count */
     #status {
       display: flex;
       flex-direction: column;
@@ -168,8 +208,7 @@
       color: #aabbcc;
     }
 
-    /* ── Direction buttons ──────────────────────────────────────
-       3×3 grid, centre cell empty. Buttons sized for touch. */
+    /* ── Direction buttons ──────────────────────────────────────*/
     .dir-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -207,7 +246,7 @@
     .dir-btn:disabled { opacity: 0.25; cursor: default; }
     .dir-btn.empty    { background: transparent; pointer-events: none; }
 
-    /* ── Legend (robot selector) ────────────────────────────────*/
+    /* ── Legend ─────────────────────────────────────────────────*/
     #legend {
       display: flex;
       gap: 8px;
@@ -246,66 +285,131 @@
       flex-shrink: 0;
     }
 
-    /* ── New Puzzle button ──────────────────────────────────────*/
-    #btn-new {
-      padding: 12px 32px;
+    /* ── Generic action buttons ─────────────────────────────────*/
+    .action-btn {
+      padding: 12px 28px;
       border: none;
       border-radius: 10px;
-      background: #2a4f2a;
-      color: #88ee88;
       font-size: clamp(0.85rem, 3.5vw, 1rem);
       cursor: pointer;
       letter-spacing: 1px;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      transition: background 0.15s, transform 0.08s;
+      transition: filter 0.15s, transform 0.08s;
       user-select: none;
     }
 
     @media (hover: hover) {
-      #btn-new:hover:not(:disabled) { background: #3a6f3a; }
+      .action-btn:hover:not(:disabled) { filter: brightness(1.15); }
     }
 
-    #btn-new:active:not(:disabled) {
-      background: #3a6f3a;
+    .action-btn:active:not(:disabled) {
+      filter: brightness(1.15);
       transform: scale(0.96);
     }
 
-    #btn-new:disabled { opacity: 0.4; cursor: default; }
+    .action-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .btn-green  { background: #2a4f2a; color: #88ee88; }
+    .btn-blue   { background: #2a3f6f; color: #88aaff; }
+    .btn-subtle { background: #252535; color: #8899aa; }
+
+    /* ── Game controls ───────────────────────────────────────────*/
+    #game-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    #declare-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #declare-input {
+      width: 72px;
+      padding: 10px 8px;
+      border: 1px solid #3a5f8f;
+      border-radius: 8px;
+      background: #0d1b2a;
+      color: #e0e0e0;
+      font-size: 1rem;
+      text-align: center;
+      touch-action: manipulation;
+    }
+
+    #declare-input:disabled { opacity: 0.35; }
   </style>
 </head>
 <body>
 
 <h1>Ricochet Robots</h1>
 
-<div id="board"></div>
+<!-- ── Home screen ─────────────────────────────────────────── -->
+<div id="screen-home">
+  <button class="mode-btn" id="btn-enter-practice" onclick="enterPractice()">Practice mode</button>
+  <button class="mode-btn" id="btn-enter-game"     onclick="enterGame()">Game mode</button>
+</div>
 
-<div id="controls">
-  <div id="status">
-    <div id="message">Loading...</div>
-    <div id="move-count"></div>
+<!-- ── Board screen (shared between modes) ────────────────── -->
+<div id="screen-board" hidden>
+  <div id="board"></div>
+
+  <div id="controls">
+
+    <!-- Game info: shown only in game mode -->
+    <div id="game-info" hidden>
+      <span id="round-display"></span>
+      <span id="score-display"></span>
+    </div>
+
+    <div id="status">
+      <div id="message"></div>
+      <div id="move-count"></div>
+    </div>
+
+    <div id="selected-display">
+      <div id="selected-dot"></div>
+      <span id="selected-label">Tap a robot to select</span>
+    </div>
+
+    <!-- Direction buttons: shared -->
+    <div class="dir-grid" role="group" aria-label="Movement controls">
+      <div class="dir-btn empty"></div>
+      <button class="dir-btn" id="btn-up"    aria-label="Move up"    onclick="doMove('up')">&#8593;</button>
+      <div class="dir-btn empty"></div>
+      <button class="dir-btn" id="btn-left"  aria-label="Move left"  onclick="doMove('left')">&#8592;</button>
+      <div class="dir-btn empty"></div>
+      <button class="dir-btn" id="btn-right" aria-label="Move right" onclick="doMove('right')">&#8594;</button>
+      <div class="dir-btn empty"></div>
+      <button class="dir-btn" id="btn-down"  aria-label="Move down"  onclick="doMove('down')">&#8595;</button>
+      <div class="dir-btn empty"></div>
+    </div>
+
+    <!-- Legend: shared -->
+    <div id="legend"></div>
+
+    <!-- Practice-only controls -->
+    <div id="practice-controls" hidden>
+      <button class="action-btn btn-green" id="btn-new" onclick="newPuzzle()">New Puzzle</button>
+    </div>
+
+    <!-- Game-only controls -->
+    <div id="game-controls" hidden>
+      <button class="action-btn btn-blue" id="btn-start-round" onclick="startRound()">Start Round</button>
+      <div id="declare-row">
+        <input id="declare-input" type="number" min="1" placeholder="# moves" />
+        <button class="action-btn btn-blue" id="btn-declare" onclick="declare()">Declare</button>
+      </div>
+    </div>
+
+    <!-- Back to menu: always shown -->
+    <button class="action-btn btn-subtle" onclick="showHome()">Menu</button>
+
   </div>
-
-  <div id="selected-display">
-    <div id="selected-dot"></div>
-    <span id="selected-label">Tap a robot to select</span>
-  </div>
-
-  <div class="dir-grid" role="group" aria-label="Movement controls">
-    <div class="dir-btn empty"></div>
-    <button class="dir-btn" id="btn-up"    aria-label="Move up"    onclick="doMove('up')">&#8593;</button>
-    <div class="dir-btn empty"></div>
-    <button class="dir-btn" id="btn-left"  aria-label="Move left"  onclick="doMove('left')">&#8592;</button>
-    <div class="dir-btn empty"></div>
-    <button class="dir-btn" id="btn-right" aria-label="Move right" onclick="doMove('right')">&#8594;</button>
-    <div class="dir-btn empty"></div>
-    <button class="dir-btn" id="btn-down"  aria-label="Move down"  onclick="doMove('down')">&#8595;</button>
-    <div class="dir-btn empty"></div>
-  </div>
-
-  <div id="legend"></div>
-
-  <button id="btn-new" onclick="newPuzzle()">New Puzzle</button>
 </div>
 
 <script>
@@ -330,16 +434,43 @@ const ROBOT_LABEL = { red:'R', blue:'B', green:'G', yellow:'Y', gray:'W' };
 const WALL_STYLE = '3px solid #c8c8d8';
 const THIN_STYLE = '1px solid #1a3050';
 
-let sessionId    = null;
-let state        = null;
-let wallMap      = {};
-let animating    = false;
-let selectedColor = null;
-let moveCount    = 0;
+// ── Shared state ─────────────────────────────────────────────
 
-// ── Board ────────────────────────────────────────────────────
+let currentMode   = null;   // 'practice' | 'game'
+let sessionId     = null;
+let state         = null;   // game object (state.game from API)
+let meta          = null;   // meta object (state.meta from API), game mode only
+let wallMap       = {};
+let animating     = false;
+let selectedColor = null;
+let moveCount     = 0;
+
+// ── Helpers ───────────────────────────────────────────────────
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
 
 function cellId(r, c) { return `cell-${r}-${c}`; }
+
+// ── Screen management ─────────────────────────────────────────
+
+function showScreen(name) {
+  document.getElementById('screen-home').hidden  = name !== 'home';
+  document.getElementById('screen-board').hidden = name !== 'board';
+}
+
+function showHome() {
+  currentMode   = null;
+  sessionId     = null;
+  state         = null;
+  meta          = null;
+  selectedColor = null;
+  moveCount     = 0;
+  showScreen('home');
+}
+
+// ── Board construction ────────────────────────────────────────
 
 function buildBoard() {
   const board = document.getElementById('board');
@@ -354,7 +485,7 @@ function buildBoard() {
   }
 }
 
-// ── Wall map ─────────────────────────────────────────────────
+// ── Wall map ──────────────────────────────────────────────────
 
 function buildWallMap(walls) {
   const map = {};
@@ -372,7 +503,7 @@ function buildWallMap(walls) {
   return map;
 }
 
-// ── Full render ──────────────────────────────────────────────
+// ── Full render ───────────────────────────────────────────────
 
 function renderAll(st) {
   // 1. Reset cells with wall borders
@@ -434,16 +565,16 @@ function renderAll(st) {
 function placeRobotEl(color, r, c) {
   const cell = document.getElementById(cellId(r, c));
   const div  = document.createElement('div');
-  div.className   = 'robot' + (color === selectedColor ? ' selected' : '');
+  div.className    = 'robot' + (color === selectedColor ? ' selected' : '');
   div.dataset.color = color;
-  div.title       = color;
-  div.textContent = ROBOT_LABEL[color] ?? color[0].toUpperCase();
+  div.title        = color;
+  div.textContent  = ROBOT_LABEL[color] ?? color[0].toUpperCase();
   div.onclick = e => { e.stopPropagation(); selectRobot(color); };
   cell.appendChild(div);
   return div;
 }
 
-// ── Selection ────────────────────────────────────────────────
+// ── Selection ─────────────────────────────────────────────────
 
 function selectRobot(color) {
   if (animating) return;
@@ -454,12 +585,11 @@ function selectRobot(color) {
   document.querySelectorAll('.legend-item').forEach(el =>
     el.classList.toggle('active', el.dataset.color === color));
 
-  // Update indicator
   const dot   = document.getElementById('selected-dot');
   const label = document.getElementById('selected-label');
   dot.style.display    = 'block';
   dot.style.background = ROBOT_HEX[color] ?? '#888';
-  label.textContent    = color.charAt(0).toUpperCase() + color.slice(1) + ' selected';
+  label.textContent    = capitalize(color) + ' selected';
 
   setMessage('Choose a direction');
   updateButtons();
@@ -472,7 +602,7 @@ function clearSelection() {
   updateButtons();
 }
 
-// ── Legend ───────────────────────────────────────────────────
+// ── Legend ────────────────────────────────────────────────────
 
 function updateLegend(robots) {
   const legend = document.getElementById('legend');
@@ -486,17 +616,31 @@ function updateLegend(robots) {
     dot.className = 'legend-dot';
     dot.style.background = ROBOT_HEX[color] ?? '#888';
     item.appendChild(dot);
-    item.appendChild(document.createTextNode(
-      color.charAt(0).toUpperCase() + color.slice(1)
-    ));
+    item.appendChild(document.createTextNode(capitalize(color)));
     legend.appendChild(item);
   }
 }
 
+// ── Buttons / controls state ──────────────────────────────────
+
 function updateButtons() {
-  const off = !selectedColor || animating;
+  // Direction buttons: base condition is robot selected and not animating
+  let canMove = !!selectedColor && !animating;
+
+  if (currentMode === 'game' && meta) {
+    // In game mode, can only move after declaring
+    canMove = canMove && !!meta.round_active && meta.declared_moves !== null;
+
+    const btnStart = document.getElementById('btn-start-round');
+    btnStart.disabled = !!meta.round_active || !!meta.is_game_over;
+
+    const canDeclare = !!meta.round_active && meta.declared_moves === null;
+    document.getElementById('btn-declare').disabled     = !canDeclare;
+    document.getElementById('declare-input').disabled   = !canDeclare;
+  }
+
   ['btn-up','btn-down','btn-left','btn-right'].forEach(id =>
-    document.getElementById(id).disabled = off);
+    document.getElementById(id).disabled = !canMove);
 }
 
 function setMessage(text, cls = '') {
@@ -509,7 +653,15 @@ function setMoveCount(n) {
   document.getElementById('move-count').textContent = n > 0 ? `Moves: ${n}` : '';
 }
 
-// ── Animation ────────────────────────────────────────────────
+function updateGameInfo() {
+  if (!meta) return;
+  document.getElementById('round-display').textContent =
+    `Round: ${meta.current_round ?? '—'}`;
+  document.getElementById('score-display').textContent =
+    `Score: ${meta.score ?? 0}`;
+}
+
+// ── Animation ─────────────────────────────────────────────────
 
 async function animateWaypoints(color, waypoints) {
   if (!waypoints || waypoints.length < 2) return;
@@ -526,7 +678,16 @@ async function animateWaypoints(color, waypoints) {
   }
 }
 
-// ── API ──────────────────────────────────────────────────────
+// ── Practice mode ─────────────────────────────────────────────
+
+async function enterPractice() {
+  currentMode = 'practice';
+  document.getElementById('practice-controls').hidden = false;
+  document.getElementById('game-controls').hidden     = true;
+  document.getElementById('game-info').hidden         = true;
+  showScreen('board');
+  await newPuzzle();
+}
 
 async function newPuzzle() {
   document.getElementById('btn-new').disabled = true;
@@ -544,8 +705,7 @@ async function newPuzzle() {
     wallMap   = buildWallMap(state.walls ?? []);
     buildBoard();
     renderAll(state);
-    const tc = state.target?.color ?? 'wildcard';
-    setMessage(`Target: ${tc.charAt(0).toUpperCase() + tc.slice(1)}`);
+    setMessage(`Target: ${capitalize(state.target?.color ?? 'wildcard')}`);
   } catch (err) {
     setMessage(`Error: ${err.message}`, 'illegal');
   } finally {
@@ -554,19 +714,100 @@ async function newPuzzle() {
   }
 }
 
+// ── Game mode ─────────────────────────────────────────────────
+
+async function enterGame() {
+  currentMode = 'game';
+  document.getElementById('practice-controls').hidden = true;
+  document.getElementById('game-controls').hidden     = false;
+  document.getElementById('game-info').hidden         = false;
+  showScreen('board');
+
+  try {
+    const res = await fetch(`${API}/game`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    sessionId = data.session_id;
+    state     = data.state.game;
+    meta      = data.state.meta;
+    wallMap   = buildWallMap(state.walls ?? []);
+    buildBoard();
+    renderAll(state);
+    updateGameInfo();
+    setMessage('Press "Start Round" to begin');
+  } catch (err) {
+    setMessage(`Error: ${err.message}`, 'illegal');
+  }
+  updateButtons();
+}
+
+async function startRound() {
+  try {
+    const res = await fetch(`${API}/game/${sessionId}/round/start`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    state   = data.state.game;
+    meta    = data.state.meta;
+    wallMap = buildWallMap(state.walls ?? []);
+    buildBoard();
+    renderAll(state);
+    moveCount = 0;
+    setMoveCount(0);
+    clearSelection();
+    updateGameInfo();
+    const ev = data.event ?? {};
+    setMessage(ev.message || `Round ${meta.current_round} — Declare your moves`);
+  } catch (err) {
+    setMessage(`Error: ${err.message}`, 'illegal');
+  }
+  updateButtons();
+}
+
+async function declare() {
+  const input = document.getElementById('declare-input');
+  const moves = parseInt(input.value, 10);
+  if (!moves || moves < 1) {
+    setMessage('Enter a valid number of moves', 'illegal');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/game/${sessionId}/declare`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moves })
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    meta  = data.state.meta;
+    const ev = data.event ?? {};
+    input.value = '';
+    setMessage(ev.message || `Declared ${moves} — now move the robot!`);
+  } catch (err) {
+    setMessage(`Error: ${err.message}`, 'illegal');
+  }
+  updateButtons();
+}
+
+// ── Move (shared, mode-aware) ─────────────────────────────────
+
 async function doMove(direction) {
   if (!selectedColor || !sessionId || animating) return;
   animating = true;
   updateButtons();
 
+  const url = currentMode === 'practice'
+    ? `${API}/practice/${sessionId}/move`
+    : `${API}/game/${sessionId}/move`;
+
   try {
-    const res = await fetch(`${API}/practice/${sessionId}/move`, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ color: selectedColor, direction })
     });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
-    const data = await res.json();
+    const data  = await res.json();
     const event = data.event ?? {};
 
     const waypoints = event.waypoints ?? [];
@@ -579,13 +820,25 @@ async function doMove(direction) {
       state = data.state.game;
       moveCount++;
       setMoveCount(moveCount);
+
+      if (currentMode === 'game') {
+        meta = data.state.meta;
+        updateGameInfo();
+      }
+
       renderAll(state);
 
       if (event.won) {
-        setMessage(`Solved in ${moveCount} move${moveCount !== 1 ? 's' : ''}!`, 'won');
+        if (currentMode === 'game' && meta.is_game_over) {
+          setMessage(event.message || `Game over! Final score: ${meta.score}`, 'won');
+        } else if (currentMode === 'game') {
+          setMessage(event.message || `Round complete! Score: ${meta.score}`);
+        } else {
+          setMessage(`Solved in ${moveCount} move${moveCount !== 1 ? 's' : ''}!`, 'won');
+        }
         clearSelection();
       } else {
-        setMessage('Choose a direction');
+        setMessage(event.message || 'Choose a direction');
       }
     }
   } catch (err) {
@@ -596,7 +849,7 @@ async function doMove(direction) {
   }
 }
 
-// ── Swipe ────────────────────────────────────────────────────
+// ── Swipe ─────────────────────────────────────────────────────
 
 (function attachSwipe() {
   const board = document.getElementById('board');
@@ -612,15 +865,13 @@ async function doMove(direction) {
     const dx = e.changedTouches[0].clientX - sx;
     const dy = e.changedTouches[0].clientY - sy;
     if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      doMove(dx > 0 ? 'right' : 'left');
-    } else {
-      doMove(dy > 0 ? 'down' : 'up');
-    }
+    doMove(Math.abs(dx) > Math.abs(dy)
+      ? (dx > 0 ? 'right' : 'left')
+      : (dy > 0 ? 'down'  : 'up'));
   }, { passive: true });
 })();
 
-// ── Keyboard ─────────────────────────────────────────────────
+// ── Keyboard ──────────────────────────────────────────────────
 
 const KEY_COLOR = { r:'red', b:'blue', g:'green', y:'yellow', w:'gray' };
 const KEY_DIR   = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
@@ -635,9 +886,8 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Init ─────────────────────────────────────────────────────
-buildBoard();
-newPuzzle();
+// ── Init ──────────────────────────────────────────────────────
+showScreen('home');
 </script>
 </body>
 </html>

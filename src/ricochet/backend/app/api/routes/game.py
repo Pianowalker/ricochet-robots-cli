@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from ricochet.backend.app.schemas.declare_request import DeclareRequest
 from ricochet.backend.app.schemas.game_request import GameRequest
+from ricochet.backend.app.schemas.move_request import MoveRequest
 from ricochet.backend.app.services.game_service import GameService
 from ricochet.backend.app.store import store
 from ricochet.backend.app.services.serializer import serialize_session
@@ -9,7 +10,7 @@ router = APIRouter()
 service = GameService()
 
 @router.post("/game")
-def create_game(request: GameRequest):
+def create_game(request: GameRequest = GameRequest()):
     session = service.create_session(
         rounds=request.rounds,
         mode=request.mode,
@@ -64,6 +65,29 @@ def declare_moves(session_id: str, request: DeclareRequest):
         "event": {
             "type": "declared",
             "moves": request.moves
+        },
+        "state": serialize_session(session)
+    }
+
+
+@router.post("/game/{session_id}/move")
+def move_robot(session_id: str, request: MoveRequest):
+    session = store.get(session_id)
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    position, won, message, waypoints = session.move(
+        request.color,
+        request.direction
+    )
+
+    return {
+        "event": {
+            "type": "move",
+            "won": won,
+            "message": message,
+            "waypoints": waypoints
         },
         "state": serialize_session(session)
     }

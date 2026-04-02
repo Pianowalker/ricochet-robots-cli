@@ -32,13 +32,23 @@ def serialize_game(game):
 
 
 def serialize_session(session):
+    current_round = getattr(session, "current_round", None)
+    total_rounds = getattr(session, "total_rounds", None)
+
+    is_game_over = (
+        current_round is not None and
+        total_rounds is not None and
+        current_round >= total_rounds and
+        not session.round_active
+    )
+
     return {
         "game": serialize_game(session.game),
         "meta": {
-            "current_round": getattr(session, "current_round", None),
+            "current_round": current_round,
             "score": getattr(session, "score", None),
             "round_active": session.round_active,
             "declared_moves": getattr(session, "declared_moves", None),
-            "is_game_over": session.current_round >= session.total_rounds and not session.round_active
+            "is_game_over": is_game_over
         }
     }
