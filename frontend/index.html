@@ -156,37 +156,6 @@
       max-width: 576px;
     }
 
-    /* Game info: round + score */
-    #game-info {
-      display: flex;
-      gap: 24px;
-      font-size: clamp(0.8rem, 3vw, 0.95rem);
-      color: #aabbcc;
-    }
-
-    /* Status: message + move count */
-    #status {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      width: 100%;
-    }
-
-    #message {
-      min-height: 1.4rem;
-      font-size: clamp(0.85rem, 3.5vw, 1rem);
-      color: #ffdd88;
-      text-align: center;
-    }
-    #message.won     { color: #80ff80; font-weight: bold; }
-    #message.illegal { color: #ff8080; }
-
-    #move-count {
-      font-size: clamp(0.75rem, 3vw, 0.9rem);
-      color: #8899aa;
-    }
-
     /* Selected robot indicator */
     #selected-display {
       display: flex;
@@ -356,20 +325,13 @@
 
 <!-- ── Board screen (shared between modes) ────────────────── -->
 <div id="screen-board" hidden>
+
+  <!-- ── Top bar ─────────────────────────────────────────────── -->
+  <div id="top-bar" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:0.9rem;color:#aabbcc;min-height:1.2rem;"></div>
+
   <div id="board"></div>
 
   <div id="controls">
-
-    <!-- Game info: shown only in game mode -->
-    <div id="game-info" hidden>
-      <span id="round-display"></span>
-      <span id="score-display"></span>
-    </div>
-
-    <div id="status">
-      <div id="message"></div>
-      <div id="move-count"></div>
-    </div>
 
     <div id="selected-display">
       <div id="selected-dot"></div>
@@ -644,21 +606,23 @@ function updateButtons() {
 }
 
 function setMessage(text, cls = '') {
-  const el = document.getElementById('message');
-  el.textContent = text;
-  el.className   = cls;
+  updateTopBar(text || undefined);
 }
 
-function setMoveCount(n) {
-  document.getElementById('move-count').textContent = n > 0 ? `Moves: ${n}` : '';
-}
+function setMoveCount(n) { /* move count now shown in top bar */ }
 
 function updateGameInfo() {
   if (!meta) return;
-  document.getElementById('round-display').textContent =
-    `Round: ${meta.current_round ?? '—'}`;
-  document.getElementById('score-display').textContent =
-    `Score: ${meta.score ?? 0}`;
+  updateTopBar();
+}
+
+function updateTopBar(message) {
+  const bar = document.getElementById('top-bar');
+  const parts = [];
+  if (meta?.current_round != null) parts.push(`Round: ${meta.current_round}`);
+  if (meta?.score        != null) parts.push(`Score: ${meta.score}`);
+  if (message)                     parts.push(message);
+  bar.textContent = parts.join('  ·  ');
 }
 
 // ── Animation ─────────────────────────────────────────────────
@@ -684,7 +648,6 @@ async function enterPractice() {
   currentMode = 'practice';
   document.getElementById('practice-controls').hidden = false;
   document.getElementById('game-controls').hidden     = true;
-  document.getElementById('game-info').hidden         = true;
   showScreen('board');
   await newPuzzle();
 }
@@ -720,7 +683,6 @@ async function enterGame() {
   currentMode = 'game';
   document.getElementById('practice-controls').hidden = true;
   document.getElementById('game-controls').hidden     = false;
-  document.getElementById('game-info').hidden         = false;
   showScreen('board');
 
   try {
