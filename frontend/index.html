@@ -364,6 +364,8 @@
 <div id="screen-home">
   <button class="mode-btn" id="btn-enter-practice" onclick="showScreen('practice_config')">Práctica</button>
   <button class="mode-btn" id="btn-enter-game"     onclick="showScreen('game_config')">Partida</button>
+  <button class="mode-btn" id="btn-rules"     onclick="showScreen('rules')"    style="background:#2a2a4a;color:#a0c4ff;border:1px solid #a0c4ff;">Reglas</button>
+  <button class="mode-btn" id="btn-controls" onclick="showScreen('controls')" style="background:#2a2a4a;color:#a0c4ff;border:1px solid #a0c4ff;">Controles</button>
 </div>
 
 <!-- ── Game config screen ──────────────────────────────────── -->
@@ -413,6 +415,106 @@
   <div class="config-buttons">
     <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
     <button class="action-btn btn-green"  onclick="enterPractice()">Iniciar práctica</button>
+  </div>
+</div>
+
+<!-- ── Rules screen ───────────────────────────────────────── -->
+<div id="screen-rules" hidden style="max-width:520px;width:100%;display:flex;flex-direction:column;gap:20px;">
+  <h2 style="color:#a0c4ff;letter-spacing:1px;text-align:center;">Reglas</h2>
+  <div style="display:flex;flex-direction:column;gap:16px;font-size:0.95rem;line-height:1.6;color:#e0e0e0;">
+
+    <section>
+      <strong style="color:#a0c4ff;">Objetivo del juego</strong>
+      <p style="margin-top:4px;">Llevar el robot indicado hasta el objetivo en la menor cantidad de movimientos posible.</p>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Cómo se juega</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Elegí cuántos movimientos creés que necesitás para llegar.</li>
+        <li>Luego intentá resolver el puzzle en esa cantidad exacta.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Movimiento de los robots</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Cuando movés un robot, se desliza en línea recta hasta chocar con una pared u otro robot.</li>
+        <li>No podés detenerlo en medio del camino.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Rebotadores (barras)</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Reflejan el movimiento del robot y el reflejo no se añade al contador de movimientos.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Puntaje</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Si llegás al objetivo en la cantidad exacta de movimientos: +1 punto.</li>
+        <li>Si te pasás: -1 punto.</li>
+        <li>Si no llegás: no sumás puntos.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Modo práctica</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Podés moverte libremente sin declarar movimientos.</li>
+        <li>Ideal para experimentar y aprender.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Modo fácil</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Se agrega un robot gris.</li>
+        <li>En objetivos comodín, el robot gris solo sirve de apoyo, pero no para llegar al objetivo.</li>
+      </ul>
+    </section>
+
+  </div>
+  <div style="display:flex;justify-content:center;">
+    <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
+  </div>
+</div>
+
+<!-- ── Controls screen ────────────────────────────────────── -->
+<div id="screen-controls" hidden style="max-width:520px;width:100%;display:flex;flex-direction:column;gap:20px;">
+  <h2 style="color:#a0c4ff;letter-spacing:1px;text-align:center;">Controles</h2>
+  <div style="display:flex;flex-direction:column;gap:16px;font-size:0.95rem;line-height:1.6;color:#e0e0e0;">
+
+    <section>
+      <strong style="color:#a0c4ff;">Cómo jugar</strong>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Seleccionar un robot</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Tocá o hacé clic sobre un robot para seleccionarlo.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">Mover un robot</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>Usá los botones de dirección para mover el robot.</li>
+      </ul>
+    </section>
+
+    <section>
+      <strong style="color:#a0c4ff;">En computadora</strong>
+      <ul style="margin-top:4px;padding-left:1.2em;">
+        <li>También podés usar las flechas del teclado para el movimiento de los robots y las teclas R, G, B, Y, W para seleccionar a los robots rojo, verde, azul, amarillo y gris respectivamente.</li>
+      </ul>
+    </section>
+
+  </div>
+  <div style="display:flex;justify-content:center;">
+    <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
   </div>
 </div>
 
@@ -522,7 +624,7 @@ function cellId(r, c) { return `cell-${r}-${c}`; }
 
 // ── Screen management ─────────────────────────────────────────
 
-const SCREENS = ['home', 'game_config', 'practice_config', 'board'];
+const SCREENS = ['home', 'game_config', 'practice_config', 'board', 'rules', 'controls'];
 
 function showScreen(name) {
   SCREENS.forEach(s =>
