@@ -563,7 +563,7 @@
       <div id="declare-row">
         <label for="declare-input" style="font-size:0.9rem;color:#aabbcc;">¿Cuántos movimientos necesitás?</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="declare-input" type="number" min="1" placeholder="# jugadas" />
+          <input id="declare-input" type="number" min="1" placeholder="" />
           <button class="action-btn btn-blue" id="btn-declare" onclick="declare()">Confirmar</button>
         </div>
       </div>
@@ -874,14 +874,14 @@ function updateTopBar() {
 
   const parts = [];
   if (currentMode === 'practice') {
-    if (moveCount > 0) parts.push(`Jugadas: ${moveCount}`);
+    if (moveCount > 0) parts.push(`Movimientos: ${moveCount}`);
   } else {
     if (meta?.current_round != null) parts.push(`Ronda: ${meta.current_round}`);
     if (meta?.score        != null) parts.push(`Puntaje: ${meta.score}`);
     if (meta?.move_count   != null) {
       parts.push(meta.declared_moves != null
-        ? `Jugadas: ${meta.move_count} / ${meta.declared_moves}`
-        : `Jugadas: ${meta.move_count}`);
+        ? `Movimientos: ${meta.move_count} / ${meta.declared_moves}`
+        : `Movimientos: ${meta.move_count}`);
     }
   }
   bar.textContent = parts.join('  ·  ');
