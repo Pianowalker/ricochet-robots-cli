@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from ricochet.backend.app.schemas.practice_request import PracticeRequest
 from ricochet.backend.app.services.practice_service import PracticeService
 from ricochet.backend.app.services.serializer import serialize_game, serialize_session
 from ricochet.backend.app.store import store
@@ -14,8 +15,11 @@ Crea una nueva sesión de práctica y devuelve el estado inicial del juego
 instanciando PracticeSession y guardándola en el store con un ID único.
 """
 @router.post("/practice")
-def create_practice():
-    session = service.create_session()
+def create_practice(request: PracticeRequest = PracticeRequest()):
+    session = service.create_session(
+        mode=request.mode,
+        difficulty=request.difficulty
+    )
     session_id = store.create(session)
 
     return {

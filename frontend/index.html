@@ -791,7 +791,16 @@ async function newPuzzle() {
   clearSelection();
 
   try {
-    const res = await fetch(`${API}/practice`, { method: 'POST' });
+    const body = {
+      mode:       document.getElementById('cfg-practice-map').value,
+      difficulty: document.getElementById('cfg-practice-easy').checked ? 'easy' : 'normal',
+    };
+    console.log('POST /practice', body);
+    const res = await fetch(`${API}/practice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
     sessionId = data.session_id;
@@ -817,7 +826,17 @@ async function enterGame() {
   showScreen('board');
 
   try {
-    const res = await fetch(`${API}/game`, { method: 'POST' });
+    const body = {
+      rounds:     parseInt(document.getElementById('cfg-game-rounds').value, 10) || 5,
+      mode:       document.getElementById('cfg-game-map').value,
+      difficulty: document.getElementById('cfg-game-easy').checked ? 'easy' : 'normal',
+    };
+    console.log('POST /game', body);
+    const res = await fetch(`${API}/game`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
     sessionId = data.session_id;

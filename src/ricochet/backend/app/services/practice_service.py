@@ -3,11 +3,13 @@ from ricochet.domain.sessions.practice_session import PracticeSession
 
 class PracticeService:
 
-    def create_session(self, colors=None):
-        if colors is None:
-            colors = ["blue", "yellow", "green", "red"]
+    def create_session(self, mode="random", difficulty="normal"):
+        colors = ["blue", "yellow", "green", "red"]
 
-        game = build_random_board(mode="random")
+        if difficulty == "easy":
+            colors.append("gray")
+
+        game = build_random_board(mode=mode)
         game.place_robots_randomly(colors)
 
         session = PracticeSession(game)
