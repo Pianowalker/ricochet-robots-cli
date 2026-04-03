@@ -563,7 +563,7 @@
       <div id="declare-row">
         <label for="declare-input" style="font-size:0.9rem;color:#aabbcc;">¿Cuántos movimientos necesitás?</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="declare-input" type="number" min="1" placeholder="" />
+          <input id="declare-input" type="number" min="1" placeholder="" enterkeyhint="go" />
           <button class="action-btn btn-blue" id="btn-declare" onclick="declare()">Confirmar</button>
         </div>
       </div>
@@ -1152,6 +1152,10 @@ async function doMove(direction) {
 
 const KEY_COLOR = { r:'red', b:'blue', g:'green', y:'yellow', w:'gray' };
 const KEY_DIR   = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+
+document.getElementById('declare-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); declare(); }
+});
 
 document.addEventListener('keydown', e => {
   if (e.key in KEY_DIR) {
