@@ -634,6 +634,15 @@ function updateGameInfo() {
 
 function updateTopBar(message) {
   const bar = document.getElementById('top-bar');
+
+  if (meta?.is_game_over) {
+    const score = meta.score ?? 0;
+    const emoji = score > 0 ? '🎉' : score < 0 ? '❌' : '🤝';
+    const label = score > 0 ? 'Victoria' : score < 0 ? 'Derrota' : 'Empate';
+    bar.textContent = `${emoji} ${label}  ·  Puntaje final: ${score}`;
+    return;
+  }
+
   const parts = [];
   if (currentMode === 'practice') {
     const tc = state?.target?.color ?? 'wildcard';
@@ -823,7 +832,7 @@ async function doMove(direction) {
 
       if (event.won) {
         if (currentMode === 'game' && meta.is_game_over) {
-          setMessage(event.message || `Game over! Final score: ${meta.score}`, 'won');
+          updateTopBar();
         } else if (currentMode === 'game') {
           setMessage(event.message || `Round complete! Score: ${meta.score}`);
         } else {
