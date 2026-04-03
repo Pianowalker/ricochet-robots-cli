@@ -874,9 +874,6 @@ function updateTopBar() {
 
   const parts = [];
   if (currentMode === 'practice') {
-    if (state?.target) {
-      parts.push(`Objetivo: ${colorLabel(state.target.color)}`);
-    }
     if (moveCount > 0) parts.push(`Jugadas: ${moveCount}`);
   } else {
     if (meta?.current_round != null) parts.push(`Ronda: ${meta.current_round}`);
@@ -885,9 +882,6 @@ function updateTopBar() {
       parts.push(meta.declared_moves != null
         ? `Jugadas: ${meta.move_count} / ${meta.declared_moves}`
         : `Jugadas: ${meta.move_count}`);
-    }
-    if (state?.target) {
-      parts.push(`Objetivo: ${colorLabel(state.target.color)}`);
     }
   }
   bar.textContent = parts.join('  ·  ');
