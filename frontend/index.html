@@ -362,57 +362,57 @@
 
 <!-- ── Home screen ─────────────────────────────────────────── -->
 <div id="screen-home">
-  <button class="mode-btn" id="btn-enter-practice" onclick="showScreen('practice_config')">Practice</button>
-  <button class="mode-btn" id="btn-enter-game"     onclick="showScreen('game_config')">Game</button>
+  <button class="mode-btn" id="btn-enter-practice" onclick="showScreen('practice_config')">Práctica</button>
+  <button class="mode-btn" id="btn-enter-game"     onclick="showScreen('game_config')">Partida</button>
 </div>
 
 <!-- ── Game config screen ──────────────────────────────────── -->
 <div id="screen-game_config" hidden>
-  <h2 style="color:#a0c4ff;letter-spacing:1px;margin-bottom:8px;">Game Setup</h2>
+  <h2 style="color:#a0c4ff;letter-spacing:1px;margin-bottom:8px;">Configurar partida</h2>
   <div class="config-form">
     <label class="config-label">
-      Rounds
+      Rondas
       <input id="cfg-game-rounds" type="number" min="1" value="5" class="config-input" style="width:70px;" />
     </label>
     <label class="config-label">
-      Map mode
+      Modo de mapa
       <select id="cfg-game-map" class="config-input">
-        <option value="random">Random</option>
-        <option value="no_bumpers">No bumpers</option>
-        <option value="at_least_one_bumper">At least one bumper</option>
+        <option value="random">Aleatorio</option>
+        <option value="no_bumpers">Sin rebotadores</option>
+        <option value="at_least_one_bumper">Con rebotadores</option>
       </select>
     </label>
     <label class="config-label config-toggle">
-      Easy mode
+      Modo fácil
       <input id="cfg-game-easy" type="checkbox" />
     </label>
   </div>
   <div class="config-buttons">
-    <button class="action-btn btn-subtle" onclick="showScreen('home')">Back</button>
-    <button class="action-btn btn-blue"   onclick="enterGame()">Start Game</button>
+    <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
+    <button class="action-btn btn-blue"   onclick="enterGame()">Iniciar partida</button>
   </div>
 </div>
 
 <!-- ── Practice config screen ─────────────────────────────── -->
 <div id="screen-practice_config" hidden>
-  <h2 style="color:#a0c4ff;letter-spacing:1px;margin-bottom:8px;">Practice Setup</h2>
+  <h2 style="color:#a0c4ff;letter-spacing:1px;margin-bottom:8px;">Configurar práctica</h2>
   <div class="config-form">
     <label class="config-label">
-      Map mode
+      Modo de mapa
       <select id="cfg-practice-map" class="config-input">
-        <option value="random">Random</option>
-        <option value="no_bumpers">No bumpers</option>
-        <option value="at_least_one_bumper">At least one bumper</option>
+        <option value="random">Aleatorio</option>
+        <option value="no_bumpers">Sin rebotadores</option>
+        <option value="at_least_one_bumper">Con rebotadores</option>
       </select>
     </label>
     <label class="config-label config-toggle">
-      Easy mode
+      Modo fácil
       <input id="cfg-practice-easy" type="checkbox" />
     </label>
   </div>
   <div class="config-buttons">
-    <button class="action-btn btn-subtle" onclick="showScreen('home')">Back</button>
-    <button class="action-btn btn-green"  onclick="enterPractice()">Start Practice</button>
+    <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
+    <button class="action-btn btn-green"  onclick="enterPractice()">Iniciar práctica</button>
   </div>
 </div>
 
@@ -422,25 +422,27 @@
   <!-- ── Top bar ─────────────────────────────────────────────── -->
   <div id="top-bar" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:0.9rem;color:#aabbcc;min-height:1.2rem;"></div>
 
+  <div id="instruction-bar" style="font-size:0.95rem;color:#e0e0e0;text-align:center;min-height:1.2rem;"></div>
+
   <div id="board"></div>
 
   <div id="controls">
 
     <div id="selected-display">
       <div id="selected-dot"></div>
-      <span id="selected-label">Tap a robot to select</span>
+      <span id="selected-label">Tocá un robot para seleccionarlo</span>
     </div>
 
     <!-- Direction buttons: shared -->
-    <div class="dir-grid" role="group" aria-label="Movement controls">
+    <div class="dir-grid" role="group" aria-label="Controles de movimiento">
       <div class="dir-btn empty"></div>
-      <button class="dir-btn" id="btn-up"    aria-label="Move up"    onclick="doMove('up')">&#8593;</button>
+      <button class="dir-btn" id="btn-up"    aria-label="Mover arriba"    onclick="doMove('up')">&#8593;</button>
       <div class="dir-btn empty"></div>
-      <button class="dir-btn" id="btn-left"  aria-label="Move left"  onclick="doMove('left')">&#8592;</button>
+      <button class="dir-btn" id="btn-left"  aria-label="Mover izquierda" onclick="doMove('left')">&#8592;</button>
       <div class="dir-btn empty"></div>
-      <button class="dir-btn" id="btn-right" aria-label="Move right" onclick="doMove('right')">&#8594;</button>
+      <button class="dir-btn" id="btn-right" aria-label="Mover derecha"   onclick="doMove('right')">&#8594;</button>
       <div class="dir-btn empty"></div>
-      <button class="dir-btn" id="btn-down"  aria-label="Move down"  onclick="doMove('down')">&#8595;</button>
+      <button class="dir-btn" id="btn-down"  aria-label="Mover abajo"     onclick="doMove('down')">&#8595;</button>
       <div class="dir-btn empty"></div>
     </div>
 
@@ -449,20 +451,23 @@
 
     <!-- Practice-only controls -->
     <div id="practice-controls" hidden>
-      <button class="action-btn btn-green" id="btn-new" onclick="newPuzzle()">New Puzzle</button>
+      <button class="action-btn btn-green" id="btn-new" onclick="newPuzzle()">Nuevo puzzle</button>
     </div>
 
     <!-- Game-only controls -->
     <div id="game-controls" hidden>
-      <button class="action-btn btn-blue" id="btn-start-round" onclick="startRound()">Start Round</button>
+      <button class="action-btn btn-blue" id="btn-start-round" onclick="startRound()">Empezar ronda</button>
       <div id="declare-row">
-        <input id="declare-input" type="number" min="1" placeholder="# moves" />
-        <button class="action-btn btn-blue" id="btn-declare" onclick="declare()">Declare</button>
+        <label for="declare-input" style="font-size:0.9rem;color:#aabbcc;">¿Cuántos movimientos necesitás?</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="declare-input" type="number" min="1" placeholder="# jugadas" />
+          <button class="action-btn btn-blue" id="btn-declare" onclick="declare()">Confirmar</button>
+        </div>
       </div>
     </div>
 
     <!-- Back to menu: always shown -->
-    <button class="action-btn btn-subtle" onclick="showHome()">Menu</button>
+    <button class="action-btn btn-subtle" onclick="showHome()">Menú</button>
 
   </div>
 </div>
@@ -502,8 +507,15 @@ let moveCount     = 0;
 
 // ── Helpers ───────────────────────────────────────────────────
 
+const COLOR_ES = { red: 'rojo', blue: 'azul', green: 'verde', yellow: 'amarillo', gray: 'gris' };
+
 function capitalize(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+function colorLabel(c) {
+  if (!c) return 'comodín';
+  return capitalize(COLOR_ES[c] ?? c);
 }
 
 function cellId(r, c) { return `cell-${r}-${c}`; }
@@ -646,16 +658,16 @@ function selectRobot(color) {
   const label = document.getElementById('selected-label');
   dot.style.display    = 'block';
   dot.style.background = ROBOT_HEX[color] ?? '#888';
-  label.textContent    = capitalize(color) + ' selected';
+  label.textContent    = colorLabel(color) + ' seleccionado';
 
-  setMessage('Choose a direction');
+  setMessage('Elegí una dirección');
   updateButtons();
 }
 
 function clearSelection() {
   selectedColor = null;
   document.getElementById('selected-dot').style.display = 'none';
-  document.getElementById('selected-label').textContent = 'Tap a robot to select';
+  document.getElementById('selected-label').textContent = 'Tocá un robot para seleccionarlo';
   updateButtons();
 }
 
@@ -673,7 +685,7 @@ function updateLegend(robots) {
     dot.className = 'legend-dot';
     dot.style.background = ROBOT_HEX[color] ?? '#888';
     item.appendChild(dot);
-    item.appendChild(document.createTextNode(capitalize(color)));
+    item.appendChild(document.createTextNode(colorLabel(color)));
     legend.appendChild(item);
   }
 }
@@ -713,7 +725,7 @@ function updateButtons() {
 }
 
 function setMessage(text, cls = '') {
-  updateTopBar(text || undefined);
+  updateTopBar();
 }
 
 function setMoveCount(n) { /* move count now shown in top bar */ }
@@ -723,7 +735,7 @@ function updateGameInfo() {
   updateTopBar();
 }
 
-function updateTopBar(message) {
+function updateTopBar() {
   const bar = document.getElementById('top-bar');
 
   if (meta?.is_game_over) {
@@ -731,25 +743,48 @@ function updateTopBar(message) {
     const emoji = score > 0 ? '🎉' : score < 0 ? '❌' : '🤝';
     const label = score > 0 ? 'Victoria' : score < 0 ? 'Derrota' : 'Empate';
     bar.textContent = `${emoji} ${label}  ·  Puntaje final: ${score}`;
+    document.getElementById('instruction-bar').textContent = '';
     return;
   }
 
   const parts = [];
   if (currentMode === 'practice') {
-    const tc = state?.target?.color ?? 'wildcard';
-    parts.push(`Target: ${capitalize(tc)}`);
-    if (moveCount > 0) parts.push(`Moves: ${moveCount}`);
+    if (state?.target) {
+      parts.push(`Objetivo: ${colorLabel(state.target.color)}`);
+    }
+    if (moveCount > 0) parts.push(`Jugadas: ${moveCount}`);
   } else {
-    if (meta?.current_round != null) parts.push(`Round: ${meta.current_round}`);
-    if (meta?.score        != null) parts.push(`Score: ${meta.score}`);
+    if (meta?.current_round != null) parts.push(`Ronda: ${meta.current_round}`);
+    if (meta?.score        != null) parts.push(`Puntaje: ${meta.score}`);
+    if (meta?.move_count   != null) {
+      parts.push(meta.declared_moves != null
+        ? `Jugadas: ${meta.move_count} / ${meta.declared_moves}`
+        : `Jugadas: ${meta.move_count}`);
+    }
+    if (state?.target) {
+      parts.push(`Objetivo: ${colorLabel(state.target.color)}`);
+    }
   }
-  if (meta?.move_count != null) {
-    parts.push(meta.declared_moves != null
-      ? `Moves: ${meta.move_count} / ${meta.declared_moves}`
-      : `Moves: ${meta.move_count}`);
-  }
-  if (message) parts.push(message);
   bar.textContent = parts.join('  ·  ');
+  updateInstructionBar();
+}
+
+function updateInstructionBar() {
+  const el = document.getElementById('instruction-bar');
+  if (!el) return;
+  if (!state?.target) { el.textContent = ''; return; }
+
+  const targetColor = state.target.color;
+  if (targetColor) {
+    const esColor = COLOR_ES[targetColor] ?? targetColor;
+    el.textContent = `Llevá el robot ${esColor} al objetivo`;
+  } else {
+    // wildcard
+    const hasGray = state.robots && 'gray' in state.robots;
+    el.textContent = hasGray
+      ? 'Llevá cualquier robot excepto el gris'
+      : 'Llevá cualquier robot al objetivo';
+  }
 }
 
 // ── Animation ─────────────────────────────────────────────────
@@ -787,7 +822,7 @@ async function newPuzzle() {
   document.getElementById('btn-new').disabled = true;
   moveCount = 0;
   setMoveCount(0);
-  setMessage('Loading...');
+  setMessage('Cargando...');
   clearSelection();
 
   try {
@@ -810,7 +845,7 @@ async function newPuzzle() {
     renderAll(state);
     updateTopBar();
   } catch (err) {
-    setMessage(`Error: ${err.message}`, 'illegal');
+    setMessage(`Error: ${err.message}`, 'illegal'); // keep "Error:" as-is (technical)
   } finally {
     document.getElementById('btn-new').disabled = false;
     updateButtons();
@@ -846,9 +881,9 @@ async function enterGame() {
     buildBoard();
     renderAll(state);
     updateGameInfo();
-    setMessage('Press "Start Round" to begin');
+    setMessage('Presioná "Empezar ronda" para comenzar');
   } catch (err) {
-    setMessage(`Error: ${err.message}`, 'illegal');
+    setMessage(`Error: ${err.message}`, 'illegal'); // keep "Error:" as-is (technical)
   }
   updateButtons();
 }
@@ -868,9 +903,9 @@ async function startRound() {
     clearSelection();
     updateGameInfo();
     const ev = data.event ?? {};
-    setMessage(ev.message || `Round ${meta.current_round} — Declare your moves`);
+    setMessage(ev.message || `Ronda ${meta.current_round} — Declará tus jugadas`);
   } catch (err) {
-    setMessage(`Error: ${err.message}`, 'illegal');
+    setMessage(`Error: ${err.message}`, 'illegal'); // keep "Error:" as-is (technical)
   }
   updateButtons();
 }
@@ -879,7 +914,7 @@ async function declare() {
   const input = document.getElementById('declare-input');
   const moves = parseInt(input.value, 10);
   if (!moves || moves < 1) {
-    setMessage('Enter a valid number of moves', 'illegal');
+    setMessage('Ingresá un número válido de jugadas', 'illegal');
     return;
   }
 
@@ -894,9 +929,9 @@ async function declare() {
     meta  = data.state.meta;
     const ev = data.event ?? {};
     input.value = '';
-    setMessage(ev.message || `Move the robot!`);
+    setMessage(ev.message || '¡Mové el robot!');
   } catch (err) {
-    setMessage(`Error: ${err.message}`, 'illegal');
+    setMessage(`Error: ${err.message}`, 'illegal'); // keep "Error:" as-is (technical)
   }
   updateButtons();
 }
@@ -926,7 +961,7 @@ async function doMove(direction) {
     const moved     = waypoints.length > 1;
 
     if (!moved) {
-      setMessage(event.message || 'Cannot move that way', 'illegal');
+      setMessage(event.message || 'No se puede mover en esa dirección', 'illegal');
     } else {
       await animateWaypoints(selectedColor, waypoints);
       state = data.state.game;
@@ -944,17 +979,17 @@ async function doMove(direction) {
         if (currentMode === 'game' && meta.is_game_over) {
           updateTopBar();
         } else if (currentMode === 'game') {
-          setMessage(event.message || `Round complete! Score: ${meta.score}`);
+          setMessage(event.message || `¡Ronda completada! Puntaje: ${meta.score}`);
         } else {
-          setMessage(`Solved in ${moveCount} move${moveCount !== 1 ? 's' : ''}!`, 'won');
+          setMessage(`¡Resuelto en ${moveCount} ${moveCount !== 1 ? 'jugadas' : 'jugada'}!`, 'won');
         }
         clearSelection();
       } else {
-        setMessage(event.message || 'Choose a direction');
+        setMessage(event.message || 'Elegí una dirección');
       }
     }
   } catch (err) {
-    setMessage(`Error: ${err.message}`, 'illegal');
+    setMessage(`Error: ${err.message}`, 'illegal'); // keep "Error:" as-is (technical)
   } finally {
     animating = false;
     updateButtons();
