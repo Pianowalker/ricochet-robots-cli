@@ -558,6 +558,7 @@
 
     <!-- Game-only controls -->
     <div id="game-controls" hidden>
+      <div id="round-status" hidden style="font-size:0.9rem;color:#aabbcc;text-align:center;"></div>
       <button class="action-btn btn-blue" id="btn-start-round" onclick="startRound()">Empezar ronda</button>
       <div id="declare-row">
         <label for="declare-input" style="font-size:0.9rem;color:#aabbcc;">¿Cuántos movimientos necesitás?</label>
@@ -598,14 +599,16 @@ const THIN_STYLE = '1px solid #1a3050';
 
 // ── Shared state ─────────────────────────────────────────────
 
-let currentMode   = null;   // 'practice' | 'game'
-let sessionId     = null;
-let state         = null;   // game object (state.game from API)
-let meta          = null;   // meta object (state.meta from API), game mode only
-let wallMap       = {};
-let animating     = false;
-let selectedColor = null;
-let moveCount     = 0;
+let currentMode      = null;   // 'practice' | 'game'
+let sessionId        = null;
+let state            = null;   // game object (state.game from API)
+let meta             = null;   // meta object (state.meta from API), game mode only
+let wallMap          = {};
+let animating        = false;
+let selectedColor    = null;
+let moveCount        = 0;
+let roundEverStarted = false;  // true once first startRound() succeeds
+let practiceWon      = false;  // true after winning in practice, until new puzzle
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -632,12 +635,13 @@ function showScreen(name) {
 }
 
 function showHome() {
-  currentMode   = null;
-  sessionId     = null;
-  state         = null;
-  meta          = null;
-  selectedColor = null;
-  moveCount     = 0;
+  currentMode      = null;
+  sessionId        = null;
+  state            = null;
+  meta             = null;
+  selectedColor    = null;
+  moveCount        = 0;
+  roundEverStarted = false;
   showScreen('home');
 }
 
@@ -749,6 +753,8 @@ function placeRobotEl(color, r, c) {
 
 function selectRobot(color) {
   if (animating) return;
+  if (currentMode === 'game' && meta && !meta.round_active) return;
+  if (currentMode === 'practice' && practiceWon) return;
   selectedColor = color;
 
   document.querySelectorAll('.robot').forEach(el =>
@@ -798,13 +804,21 @@ function updateButtons() {
   // Direction buttons: base condition is robot selected and not animating
   let canMove = !!selectedColor && !animating;
 
+  if (currentMode === 'practice') {
+    const showMove = !practiceWon;
+    document.getElementById('selected-display').hidden = !showMove;
+    document.querySelector('.dir-grid').hidden          = !showMove;
+    document.getElementById('legend').hidden            = !showMove;
+    canMove = canMove && showMove;
+  }
+
   if (currentMode === 'game' && meta) {
     const roundActive   = !!meta.round_active;
     const declared      = meta.declared_moves !== null;
     const gameOver      = !!meta.is_game_over;
 
     // STATE 5: game over — hide everything
-    // STATE 1 & 4: no round active — show only Start Round
+    // STATE 1 & 4: no round active — show only Start Round + status
     // STATE 2: round active, not declared — show only declare row
     // STATE 3: declared — show only movement + robot selector
 
@@ -812,11 +826,20 @@ function updateButtons() {
     const showDeclare  = roundActive  && !declared;   // STATE 2
     const showMove     = roundActive  &&  declared;   // STATE 3
 
-    document.getElementById('btn-start-round').hidden = !showStart;
-    document.getElementById('declare-row').hidden     = !showDeclare;
+    document.getElementById('btn-start-round').hidden  = !showStart;
+    document.getElementById('declare-row').hidden      = !showDeclare;
     document.getElementById('selected-display').hidden = !showMove;
-    document.querySelector('.dir-grid').hidden         = !showMove;
-    document.getElementById('legend').hidden           = !showMove;
+    document.querySelector('.dir-grid').hidden          = !showMove;
+    document.getElementById('legend').hidden            = !showMove;
+
+    // Status message when no round has started yet
+    const statusEl = document.getElementById('round-status');
+    if (showStart && !roundEverStarted) {
+      statusEl.hidden      = false;
+      statusEl.textContent = "Presioná 'Empezar ronda' para comenzar";
+    } else {
+      statusEl.hidden = true;
+    }
 
     // In game mode, movement also requires a robot selected
     canMove = canMove && showMove;
@@ -874,6 +897,17 @@ function updateTopBar() {
 function updateInstructionBar() {
   const el = document.getElementById('instruction-bar');
   if (!el) return;
+
+  if (currentMode === 'practice' && practiceWon) {
+    el.textContent = `Objetivo alcanzado en ${moveCount} ${moveCount !== 1 ? 'movimientos' : 'movimiento'}. Presioná nuevo puzzle para continuar.`;
+    return;
+  }
+
+  if (currentMode === 'game' && meta && !meta.round_active && roundEverStarted && !meta.is_game_over) {
+    el.textContent = "Ronda finalizada. Presioná 'Siguiente ronda'";
+    return;
+  }
+
   if (!state?.target) { el.textContent = ''; return; }
 
   const targetColor = state.target.color;
@@ -910,18 +944,16 @@ async function animateWaypoints(color, waypoints) {
 
 async function enterPractice() {
   currentMode = 'practice';
-  document.getElementById('practice-controls').hidden  = false;
-  document.getElementById('game-controls').hidden      = true;
-  // Ensure shared movement UI is always visible in practice mode
-  document.getElementById('selected-display').hidden   = false;
-  document.querySelector('.dir-grid').hidden            = false;
-  document.getElementById('legend').hidden              = false;
+  document.getElementById('practice-controls').hidden = false;
+  document.getElementById('game-controls').hidden     = true;
   showScreen('board');
   await newPuzzle();
 }
 
 async function newPuzzle() {
   document.getElementById('btn-new').disabled = true;
+  practiceWon = false;
+  const msgEl = document.getElementById('practice-won-msg');
   moveCount = 0;
   setMoveCount(0);
   setMessage('Cargando...');
@@ -995,8 +1027,9 @@ async function startRound() {
     const res = await fetch(`${API}/game/${sessionId}/round/start`, { method: 'POST' });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
-    state   = data.state.game;
-    meta    = data.state.meta;
+    state            = data.state.game;
+    meta             = data.state.meta;
+    roundEverStarted = true;
     wallMap = buildWallMap(state.walls ?? []);
     buildBoard();
     renderAll(state);
@@ -1083,7 +1116,8 @@ async function doMove(direction) {
         } else if (currentMode === 'game') {
           setMessage(event.message || `¡Ronda completada! Puntaje: ${meta.score}`);
         } else {
-          setMessage(`¡Resuelto en ${moveCount} ${moveCount !== 1 ? 'jugadas' : 'jugada'}!`, 'won');
+          practiceWon = true;
+          updateInstructionBar();
         }
         clearSelection();
       } else {
