@@ -1121,7 +1121,7 @@ async function doMove(direction) {
           setMessage(event.message || `¡Ronda completada! Puntaje: ${meta.score}`);
         } else {
           practiceWon = true;
-          updateInstructionBar();
+          updateTopBar();
         }
         clearSelection();
       } else {
