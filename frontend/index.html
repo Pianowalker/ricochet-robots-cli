@@ -66,8 +66,8 @@
     /* ── Board ──────────────────────────────────────────────────*/
     #board {
       display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      grid-template-rows: repeat(16, 1fr);
+      grid-template-columns: repeat(var(--board-size, 16), 1fr);
+      grid-template-rows: repeat(var(--board-size, 16), 1fr);
       width: min(calc(100vw - 24px), 576px);
       aspect-ratio: 1;
       border: 3px solid #8888aa;
@@ -607,6 +607,10 @@ const ROBOT_LABEL = { red:'R', blue:'B', green:'G', yellow:'Y', gray:'W' };
 const WALL_STYLE = '3px solid #c8c8d8';
 const THIN_STYLE = '1px solid #1a3050';
 
+// ── Board configuration ───────────────────────────────────────
+
+let boardSize = 16;   // can be changed before calling buildBoard()
+
 // ── Shared state ─────────────────────────────────────────────
 
 let currentMode      = null;   // 'practice' | 'game'
@@ -660,8 +664,9 @@ function showHome() {
 function buildBoard() {
   const board = document.getElementById('board');
   board.innerHTML = '';
-  for (let r = 0; r < 16; r++) {
-    for (let c = 0; c < 16; c++) {
+  board.style.setProperty('--board-size', boardSize);
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
       const div = document.createElement('div');
       div.className = 'cell';
       div.id = cellId(r, c);
@@ -692,8 +697,8 @@ function buildWallMap(walls) {
 
 function renderAll(st) {
   // 1. Reset cells with wall borders
-  for (let r = 0; r < 16; r++) {
-    for (let c = 0; c < 16; c++) {
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
       const cell = document.getElementById(cellId(r, c));
       cell.className = 'cell';
       cell.innerHTML = '';
