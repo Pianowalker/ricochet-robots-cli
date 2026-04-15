@@ -1,137 +1,74 @@
-# Ricochet Robots – CLI Edition
+# Ricochet Robots
 
-A fully functional digital implementation of the board game **Ricochet Robots**, developed in Python with a modular architecture and command-line interface.
-
-This project recreates the core mechanics of the original game, including rotating quadrants, random board assembly, colored bumpers with accurate reflection behavior, and a single-player scoring mode.
+Implementación web del juego de mesa Ricochet Robots, con frontend en HTML/JS y backend en Python + FastAPI.
 
 ---
 
-## 🎮 Features
-
-- 16x16 board assembled from 4 official-style quadrants
-- Correct central 2x2 blocked zone
-- Random board generation with valid quadrant rotations
-- Accurate bumper reflection mechanics (color-sensitive)
-- Support for wildcard (multi-color spiral) targets
-- Single-player round system with scoring
-- Text-based CLI board rendering
-- Debug mode for inspecting quadrants and rotations
-
----
-
-## 🧠 Game Mechanics Implemented
-
-- Robots slide in a straight line until hitting:
-  - A wall
-  - Another robot
-  - The board edge
-- Bumpers (`/` and `\`) reflect robots correctly
-- Robots **do not reflect** on bumpers of their own color
-- Targets include colored objectives and a wildcard target
-- Quadrants rotate geometrically correctly (walls, targets, bumpers and borders)
-
----
-
-## 🏗 Architecture Overview
-
-The project follows a modular and domain-oriented structure:
-
-- `game.py` – Core game engine and movement logic
-- `quadrant.py` – Quadrant model with rotation mechanics
-- `models.py` – Domain entities (`Robot`, `Target`, `Bumper`)
-- `maps.py` – Quadrant definitions and random board assembly
-- `sessions.py` – Single-player session logic and scoring
-- `cli.py` – Main command-line interface
-- `debug_board.py` – Development tool for inspecting boards and rotations
-
-The board is built by selecting four distinct quadrants at random and applying constrained rotations so that their inner blocked cells align correctly in the center of the 16x16 board.
-
----
-
-## 🚀 How to Run
-
-Make sure you have Python 3.10+ installed. Install the package first:
+## Estructura del proyecto
 
 ```
+ricochet/
+├── frontend/                  # Cliente web (HTML + CSS + JS, sin build toolchain)
+│   ├── index.html             # Juego principal (modos práctica y partida)
+│   └── editor.html            # Herramienta interna para crear puzzles de tutorial
+│
+├── src/                       # Paquete Python (convención src-layout)
+│   └── ricochet/
+│       ├── domain/            # Lógica del juego, independiente del framework
+│       │   ├── game.py        # Clase Game: tablero, movimiento de robots, física
+│       │   ├── quadrant.py    # Clase Quadrant: cuadrante 8x8, rotación
+│       │   ├── maps.py        # 16 definiciones de cuadrantes + ensamblado de tablero
+│       │   ├── models.py      # Clases Robot, Target, Bumper
+│       │   └── sessions/      # Sesiones de juego (práctica y partida)
+│       │
+│       └── backend/
+│           └── app/
+│               ├── main.py              # FastAPI app, middlewares, registro de routers
+│               ├── store.py             # Almacenamiento en memoria de sesiones activas
+│               ├── api/routes/          # Endpoints REST
+│               │   ├── practice.py      # POST /practice, POST /practice/{id}/move
+│               │   ├── game.py          # POST /game, /round/start, /declare, /move
+│               │   └── editor.py        # GET /editor/quadrants, POST /editor/puzzle
+│               ├── services/            # Lógica de aplicación
+│               │   ├── game_service.py
+│               │   ├── practice_service.py
+│               │   └── serializer.py    # Convierte objetos de dominio a JSON
+│               ├── schemas/             # Modelos Pydantic para requests
+│               └── data/
+│                   └── puzzles/
+│                       └── tutorial/    # Puzzles creados con el editor (JSON)
+│
+├── tests/                     # Tests del dominio
+├── pyproject.toml             # Configuración del paquete Python
+└── README.md
+```
+
+### Nota sobre la estructura
+
+El frontend (`frontend/`) y el backend (`src/ricochet/backend/`) están en lugares distintos del árbol porque siguen convenciones diferentes. El frontend es un archivo HTML estático que no requiere compilación. El backend sigue la convención `src-layout` estándar de Python, que evita conflictos de imports y es compatible con herramientas como `pytest` y `setuptools`.
+
+---
+
+## Correr en local
+
+**Instalar dependencias:**
+```bash
 pip install -e .
 ```
 
-### GUI version
-
-```
-python -m ricochet.gui_pygame.main
-```
-
-### CLI version
-
-```
-python -m ricochet.cli
+**Backend:**
+```bash
+uvicorn ricochet.backend.app.main:app --reload
 ```
 
-You will be prompted to choose the number of rounds.
-During each round:
-
-1. Declare how many moves you believe are needed.
-2. Enter moves in the format `XD`, where:
-   - First letter = Robot color: `R` (red), `B` (blue), `G` (green), `Y` (yellow)
-   - Second letter = Direction: `r` (right), `l` (left), `u` (up), `d` (down)
-
-Examples: `Rl` moves the red robot left, `Bd` moves the blue robot down.
-
----
-
-🧪 Debug Mode
-
-For development and verification purposes:
-
+**Frontend:**
+```bash
+cd frontend
+python -m http.server 3000
 ```
-python tools/debug_board.py
+Luego abrí `http://localhost:3000` en el navegador.
+
+**Editor de puzzles** (herramienta interna, requiere backend corriendo):
 ```
-
-This prints quadrants and their rotations to validate geometry and wall placement.
-
-
-
-📌 Current Scope
-
-Core engine complete
-
-Random board generation implemented
-
-Multiple official-style quadrants digitalized
-
-Color-sensitive bumper reflection
-
-CLI-based gameplay
-
-
-
-🔮 Future Improvements
-
-Additional official quadrant maps
-
-Refactoring of movement logic for clarity
-
-Unit testing
-
-Game state persistence
-
-Multiplayer mode
-
-
-
-📖 About
-
-This project was developed as a structured exercise in:
-
-Object-oriented design
-
-Board game modeling
-
-Geometric transformations
-
-Clean architecture principles
-
-Incremental feature development
-
-Feedback and suggestions are welcome.
+http://localhost:3000/editor.html
+```
