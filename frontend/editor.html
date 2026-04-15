@@ -183,6 +183,16 @@
     .tray-target::before { top: 50%; left: 10%; right: 10%; height: 2px; transform: translateY(-50%); }
     .tray-target::after  { left: 50%; top: 10%; bottom: 10%; width: 2px; transform: translateX(-50%); }
 
+    /* ── Load panel ── */
+    #load-panel {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 720px;
+    }
+
     /* ── Save panel ── */
     #save-panel {
       display: flex;
@@ -262,6 +272,18 @@
       <div class="tray-target"></div> Objetivo
     </div>
   </div>
+</div>
+
+<!-- Load panel -->
+<div id="load-panel">
+  <div class="field">
+    <label>Cargar puzzle existente</label>
+    <select id="sel-puzzle" style="min-width:180px">
+      <option value="">— elegí un puzzle —</option>
+    </select>
+  </div>
+  <button onclick="openLoadPanel()">Actualizar lista</button>
+  <button class="green" onclick="loadPuzzle()">Cargar</button>
 </div>
 
 <!-- Save panel -->
@@ -553,6 +575,77 @@ async function savePuzzle() {
   }
 }
 
+// ── Load existing puzzle ──────────────────────────────────────
+
+async function openLoadPanel() {
+  setStatus('Actualizando lista...');
+  try {
+    const res = await fetch(`${API}/editor/puzzles`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const names = await res.json();
+
+    const sel = document.getElementById('sel-puzzle');
+    sel.innerHTML = '<option value="">— elegí un puzzle —</option>';
+    for (const name of names) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = name;
+      sel.appendChild(opt);
+    }
+    setStatus(names.length ? `${names.length} puzzle(s) disponibles.` : 'No hay puzzles guardados.');
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+}
+
+async function loadPuzzle() {
+  const name = document.getElementById('sel-puzzle').value;
+  if (!name) { setStatus('Elegí un puzzle de la lista.'); return; }
+
+  setStatus('Cargando puzzle...');
+  try {
+    const res = await fetch(`${API}/editor/puzzle/${encodeURIComponent(name)}`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const data = await res.json();
+
+    // Restore board state
+    boardSize    = data.board_size;
+    wallMap      = buildWallMap(data.walls);
+    quadrantData = { board_size: data.board_size, walls: data.walls, bumpers: data.bumpers };
+    placements   = {};
+    targetColor  = null;
+
+    buildBoard();
+    renderWalls();
+    renderBumpers(data.bumpers);
+
+    // Place robots
+    for (const [color, pos] of Object.entries(data.robots ?? {})) {
+      placeRobot(color, pos[0], pos[1]);
+    }
+
+    // Place target
+    if (data.target?.position) {
+      targetColor = data.target.color ?? null;
+      const [r, c] = data.target.position;
+      const hex  = TARGET_HEX[targetColor] ?? '#ffffff';
+      const cell = document.getElementById(`cell-${r}-${c}`);
+      cell.insertAdjacentHTML('beforeend',
+        `<div class="target-ring"    style="--tc:${hex}"></div>
+         <div class="target-cross-h" style="--tc:${hex}"></div>
+         <div class="target-cross-v" style="--tc:${hex}"></div>`);
+      placements.target = [r, c];
+    }
+
+    // Restore puzzle name in save field
+    document.getElementById('puzzle-name').value = name;
+
+    updateTray();
+    setStatus(`Puzzle "${name}" cargado.`);
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+}
+
 // ── Helpers ───────────────────────────────────────────────────
 
 function setStatus(msg) {
@@ -561,6 +654,7 @@ function setStatus(msg) {
 
 // Init
 buildBoard();
+openLoadPanel();
 </script>
 </body>
 </html>

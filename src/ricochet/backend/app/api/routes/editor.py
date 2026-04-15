@@ -76,6 +76,27 @@ def get_quadrant(color: str, variant: int, rotation: int = 0):
     return _serialize_quadrant(q)
 
 
+# ── GET /editor/puzzles ───────────────────────────────────────────────────────
+
+@router.get("/puzzles")
+def list_puzzles():
+    """Return the names of all saved puzzles."""
+    if not PUZZLES_DIR.exists():
+        return []
+    return [p.stem for p in sorted(PUZZLES_DIR.glob("*.json"))]
+
+
+# ── GET /editor/puzzle/{name} ─────────────────────────────────────────────────
+
+@router.get("/puzzle/{name}")
+def load_puzzle(name: str):
+    """Load a saved puzzle by name."""
+    path = PUZZLES_DIR / f"{name}.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Puzzle '{name}' not found")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 # ── POST /editor/puzzle ───────────────────────────────────────────────────────
 
 @router.post("/puzzle")
