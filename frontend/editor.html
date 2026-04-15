@@ -137,6 +137,17 @@
       z-index: 1;
       pointer-events: none;
     }
+    .target-sym {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      z-index: 2;
+      pointer-events: none;
+      line-height: 1;
+    }
 
     /* ── Piece tray ── */
     #tray {
@@ -307,6 +318,9 @@ const ROBOT_HEX = {
 const ROBOT_LABEL = { red: 'R', blue: 'B', green: 'G', yellow: 'Y', gray: 'W' };
 const TARGET_HEX  = { red: '#ff5555', blue: '#4499ff', green: '#44dd77', yellow: '#ffdd33', gray: '#aaaaaa' };
 const BUMPER_HEX  = { red: '#ff6060', blue: '#5599ff', green: '#55dd88', yellow: '#ffe055', gray: '#bbbbbb' };
+const SYM_CHAR    = { cross: '✚', sun: '✦', planet: '⊕', moon: '☽', spiral: '⊙' };
+const SYM_NAMES   = ['cross', 'sun', 'planet', 'moon', 'spiral'];
+const SYM_LABELS  = ['Cruz', 'Sol', 'Planeta', 'Luna', 'Espiral'];
 
 const WALL_STYLE = '3px solid #c8c8d8';
 const THIN_STYLE = '1px solid #1a3050';
@@ -315,7 +329,8 @@ let boardSize  = 8;
 let wallMap    = {};
 let quadrantData = null;   // raw data from backend
 let placements = {};       // { color: [r,c], ..., target: [r,c] }
-let targetColor = null;    // color of the target piece
+let targetColor  = null;   // color of the target piece
+let targetSymbol = null;   // symbol of the target piece
 
 // ── Board construction ────────────────────────────────────────
 
@@ -399,8 +414,9 @@ async function loadQuadrant() {
 
     boardSize = quadrantData.board_size;
     wallMap   = buildWallMap(quadrantData.walls);
-    placements = {};
-    targetColor = null;
+    placements   = {};
+    targetColor  = null;
+    targetSymbol = null;
     updateTray();
 
     buildBoard();
@@ -465,34 +481,50 @@ function placeRobot(color, r, c) {
   updateTray();
 }
 
+function renderTargetAt(r, c, color, symbol) {
+  const hex     = TARGET_HEX[color] ?? '#ffffff';
+  const symChar = SYM_CHAR[symbol]  ?? '?';
+  const cell    = document.getElementById(`cell-${r}-${c}`);
+  cell.querySelectorAll('.target-ring,.target-cross-h,.target-cross-v,.target-sym')
+      .forEach(el => el.remove());
+  cell.insertAdjacentHTML('beforeend',
+    `<div class="target-ring" style="--tc:${hex}"></div>
+     <span class="target-sym" style="color:${hex}">${symChar}</span>`);
+}
+
 function placeTarget(r, c) {
-  // Ask for target color after drop
-  const colors = ['red', 'blue', 'green', 'yellow', 'gray', 'wildcard'];
-  const labels = ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Gris', 'Comodín'];
-  const choice = prompt(
+  // Ask for target color
+  const colors      = ['red', 'blue', 'green', 'yellow', 'gray', 'wildcard'];
+  const colorLabels = ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Gris', 'Comodín'];
+  const colorChoice = prompt(
     'Color del objetivo:\n' +
-    colors.map((col, i) => `${i + 1}. ${labels[i]}`).join('\n') +
+    colors.map((col, i) => `${i + 1}. ${colorLabels[i]}`).join('\n') +
     '\n\nIngresá el número:'
   );
-  const idx = parseInt(choice, 10) - 1;
-  if (idx < 0 || idx >= colors.length || isNaN(idx)) return;
-  targetColor = colors[idx] === 'wildcard' ? null : colors[idx];
+  const colorIdx = parseInt(colorChoice, 10) - 1;
+  if (isNaN(colorIdx) || colorIdx < 0 || colorIdx >= colors.length) return;
+  targetColor = colors[colorIdx] === 'wildcard' ? null : colors[colorIdx];
+
+  // Ask for symbol
+  const symChoice = prompt(
+    'Símbolo del objetivo:\n' +
+    SYM_NAMES.map((s, i) => `${i + 1}. ${SYM_LABELS[i]}`).join('\n') +
+    '\n\nIngresá el número:'
+  );
+  const symIdx = parseInt(symChoice, 10) - 1;
+  if (isNaN(symIdx) || symIdx < 0 || symIdx >= SYM_NAMES.length) return;
+  targetSymbol = SYM_NAMES[symIdx];
 
   // Remove from previous cell if already placed
   if (placements.target) {
     const [pr, pc] = placements.target;
+    renderTargetAt(pr, pc, null, null);   // clears visuals
     document.getElementById(`cell-${pr}-${pc}`)
-      .querySelectorAll('.target-ring,.target-cross-h,.target-cross-v')
-      .forEach(el => el.remove());
+      .querySelectorAll('.target-ring,.target-sym').forEach(el => el.remove());
   }
 
   placements.target = [r, c];
-  const hex  = TARGET_HEX[targetColor] ?? '#ffffff';
-  const cell = document.getElementById(`cell-${r}-${c}`);
-  cell.insertAdjacentHTML('beforeend',
-    `<div class="target-ring"    style="--tc:${hex}"></div>
-     <div class="target-cross-h" style="--tc:${hex}"></div>
-     <div class="target-cross-v" style="--tc:${hex}"></div>`);
+  renderTargetAt(r, c, targetColor, targetSymbol);
   updateTray();
 }
 
@@ -519,8 +551,9 @@ document.getElementById('tray-target').addEventListener('dragstart', e => {
 // ── Clear ─────────────────────────────────────────────────────
 
 function clearBoard() {
-  placements  = {};
-  targetColor = null;
+  placements   = {};
+  targetColor  = null;
+  targetSymbol = null;
   if (!quadrantData) return;
   buildBoard();
   renderWalls();
@@ -556,6 +589,7 @@ async function savePuzzle() {
     robots,
     target: {
       color:    targetColor,
+      symbol:   targetSymbol,
       position: placements.target,
     },
   };
@@ -613,6 +647,7 @@ async function loadPuzzle() {
     quadrantData = { board_size: data.board_size, walls: data.walls, bumpers: data.bumpers };
     placements   = {};
     targetColor  = null;
+    targetSymbol = null;
 
     buildBoard();
     renderWalls();
@@ -625,14 +660,10 @@ async function loadPuzzle() {
 
     // Place target
     if (data.target?.position) {
-      targetColor = data.target.color ?? null;
+      targetColor  = data.target.color  ?? null;
+      targetSymbol = data.target.symbol ?? null;
       const [r, c] = data.target.position;
-      const hex  = TARGET_HEX[targetColor] ?? '#ffffff';
-      const cell = document.getElementById(`cell-${r}-${c}`);
-      cell.insertAdjacentHTML('beforeend',
-        `<div class="target-ring"    style="--tc:${hex}"></div>
-         <div class="target-cross-h" style="--tc:${hex}"></div>
-         <div class="target-cross-v" style="--tc:${hex}"></div>`);
+      renderTargetAt(r, c, targetColor, targetSymbol);
       placements.target = [r, c];
     }
 
