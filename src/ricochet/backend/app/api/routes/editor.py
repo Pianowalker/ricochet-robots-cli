@@ -9,7 +9,7 @@ from ricochet.backend.app.schemas.puzzle_data import PuzzleData
 
 router = APIRouter(prefix="/editor", tags=["editor"])
 
-PUZZLES_DIR = Path(__file__).parents[6] / "puzzles" / "tutorial"
+PUZZLES_DIR = Path(__file__).parents[2] / "data" / "puzzles" / "tutorial"
 
 ALL_QUADRANTS = {
     "green":  GREEN_QUADRANTS,
