@@ -284,6 +284,7 @@ const ROBOT_HEX = {
 };
 const ROBOT_LABEL = { red: 'R', blue: 'B', green: 'G', yellow: 'Y', gray: 'W' };
 const TARGET_HEX  = { red: '#ff5555', blue: '#4499ff', green: '#44dd77', yellow: '#ffdd33', gray: '#aaaaaa' };
+const BUMPER_HEX  = { red: '#ff6060', blue: '#5599ff', green: '#55dd88', yellow: '#ffe055', gray: '#bbbbbb' };
 
 const WALL_STYLE = '3px solid #c8c8d8';
 const THIN_STYLE = '1px solid #1a3050';
@@ -350,7 +351,7 @@ function renderBumpers(bumpers) {
   for (const b of bumpers) {
     const [r, c] = b.position;
     const cell   = document.getElementById(`cell-${r}-${c}`);
-    const stroke = '#aaaaaa';
+    const stroke = BUMPER_HEX[b.color] ?? '#aaaaaa';
     const [x1, y1, x2, y2] = b.diagonal === '/' ? [5, 95, 95, 5] : [5, 5, 95, 95];
     cell.insertAdjacentHTML('beforeend',
       `<svg viewBox="0 0 100 100" preserveAspectRatio="none"
