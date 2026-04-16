@@ -49,19 +49,34 @@ def cell_to_pixel(row: int, col: int) -> tuple[int, int]:
     return (x, y)
 
 
-def draw_board(surface: pygame.Surface, offset_x: int = 0, offset_y: int = 0) -> None:
+def draw_board(
+    surface: pygame.Surface,
+    offset_x: int = 0,
+    offset_y: int = 0,
+    rows: int = BOARD_ROWS,
+    cols: int = BOARD_COLS,
+    cell_size: int = CELL_SIZE,
+) -> None:
     """Dibuja el fondo del tablero y la grilla."""
-    rect = pygame.Rect(offset_x, offset_y, BOARD_PIXEL_WIDTH, BOARD_PIXEL_HEIGHT)
+    pw = cols * cell_size
+    ph = rows * cell_size
+    rect = pygame.Rect(offset_x, offset_y, pw, ph)
     surface.fill(COLOR_BG_BOARD, rect)
-    for r in range(BOARD_ROWS + 1):
-        y = offset_y + r * CELL_SIZE
-        pygame.draw.line(surface, COLOR_GRID_LINE, (offset_x, y), (offset_x + BOARD_PIXEL_WIDTH, y), 1)
-    for c in range(BOARD_COLS + 1):
-        x = offset_x + c * CELL_SIZE
-        pygame.draw.line(surface, COLOR_GRID_LINE, (x, offset_y), (x, offset_y + BOARD_PIXEL_HEIGHT), 1)
+    for r in range(rows + 1):
+        y = offset_y + r * cell_size
+        pygame.draw.line(surface, COLOR_GRID_LINE, (offset_x, y), (offset_x + pw, y), 1)
+    for c in range(cols + 1):
+        x = offset_x + c * cell_size
+        pygame.draw.line(surface, COLOR_GRID_LINE, (x, offset_y), (x, offset_y + ph), 1)
 
 
-def draw_walls(surface: pygame.Surface, walls: set, offset_x: int = 0, offset_y: int = 0) -> None:
+def draw_walls(
+    surface: pygame.Surface,
+    walls: set,
+    offset_x: int = 0,
+    offset_y: int = 0,
+    cell_size: int = CELL_SIZE,
+) -> None:
     """Dibuja las paredes del juego. walls: set de frozenset({(r1,c1), (r2,c2)}).
 
     Se usa un rectángulo sólido en lugar de líneas gruesas para que las paredes
@@ -73,16 +88,16 @@ def draw_walls(surface: pygame.Surface, walls: set, offset_x: int = 0, offset_y:
         if r1 == r2:
             # pared vertical entre dos columnas
             col = max(c1, c2)
-            x = offset_x + col * CELL_SIZE
-            y = offset_y + r1 * CELL_SIZE
-            rect = pygame.Rect(x - thick // 2, y, thick, CELL_SIZE)
+            x = offset_x + col * cell_size
+            y = offset_y + r1 * cell_size
+            rect = pygame.Rect(x - thick // 2, y, thick, cell_size)
             surface.fill(COLOR_WALL, rect)
         else:
             # pared horizontal entre dos filas
             row = max(r1, r2)
-            x = offset_x + c1 * CELL_SIZE
-            y = offset_y + row * CELL_SIZE
-            rect = pygame.Rect(x, y - thick // 2, CELL_SIZE, thick)
+            x = offset_x + c1 * cell_size
+            y = offset_y + row * cell_size
+            rect = pygame.Rect(x, y - thick // 2, cell_size, thick)
             surface.fill(COLOR_WALL, rect)
 
 
@@ -165,20 +180,20 @@ def draw_targets(
     active_target,
     offset_x: int = 0,
     offset_y: int = 0,
+    cell_size: int = CELL_SIZE,
 ) -> None:
     """Dibuja solo el objetivo activo en el tablero (resaltado con contorno blanco)."""
     if active_target is None:
         return
     target = active_target
     r, c = target.position
-    x, y = cell_to_pixel(r, c)
-    px = offset_x + x
-    py = offset_y + y
+    px = offset_x + c * cell_size + cell_size // 2
+    py = offset_y + r * cell_size + cell_size // 2
     if target.color is None:
         color = COLOR_TARGET_WILDCARD
     else:
         color = COLOR_TARGET.get(target.color, COLOR_TARGET_WILDCARD)
-    radius = CELL_SIZE // 3
+    radius = cell_size // 3
     _draw_target_shape(surface, px, py, target.symbol, (255, 255, 255), radius + 2, width=2)
     _draw_target_shape(surface, px, py, target.symbol, color, radius)
 
@@ -232,6 +247,7 @@ def draw_robots(
     robot_override: dict | None = None,
     robot_pixel_override: dict | None = None,
     selected_color: str | None = None,
+    cell_size: int = CELL_SIZE,
 ) -> None:
     """
     Dibuja los robots con forma de robot simple.
@@ -245,14 +261,12 @@ def draw_robots(
             px, py = offset_x + px, offset_y + py
         elif robot_override and color in robot_override:
             r, c = robot_override[color]
-            x, y = cell_to_pixel(r, c)
-            px = offset_x + x
-            py = offset_y + y
+            px = offset_x + c * cell_size + cell_size // 2
+            py = offset_y + r * cell_size + cell_size // 2
         else:
             r, c = robot.position
-            x, y = cell_to_pixel(r, c)
-            px = offset_x + x
-            py = offset_y + y
+            px = offset_x + c * cell_size + cell_size // 2
+            py = offset_y + r * cell_size + cell_size // 2
         fill = COLOR_ROBOT.get(color, (150, 150, 150))
         _draw_robot_shape(surface, px, py, fill, selected=(color == selected_color))
 
@@ -262,14 +276,14 @@ def draw_bumpers(
     bumpers: dict,
     offset_x: int = 0,
     offset_y: int = 0,
+    cell_size: int = CELL_SIZE,
 ) -> None:
     """Dibuja los bumpers como diagonales en la celda, con el color del bumper."""
     for (r, c), bumper in bumpers.items():
-        x, y = cell_to_pixel(r, c)
-        px = offset_x + x
-        py = offset_y + y
+        px = offset_x + c * cell_size + cell_size // 2
+        py = offset_y + r * cell_size + cell_size // 2
         color = COLOR_ROBOT.get(bumper.color, COLOR_BUMPER_LINE)
-        half = CELL_SIZE // 2 - 2
+        half = cell_size // 2 - 2
         if bumper.diagonal == "/":
             pygame.draw.line(surface, color, (px - half, py + half), (px + half, py - half), 4)
         else:
