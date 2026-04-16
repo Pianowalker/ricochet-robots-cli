@@ -321,16 +321,16 @@ def draw_tutorial_panel(
     y += 10
 
     if not level_complete:
-        # Instrucción activa
-        if instruction:
-            y = _draw_wrapped_text(surface, font, instruction, ui_x, y, text_max_w, (220, 230, 255))
-            y += 8
-
-        # Feedback o error tras un movimiento
+        # Feedback o error tras un movimiento (va primero para leerse antes)
         if message:
             is_error = "incorrecto" in message.lower()
             msg_color = (255, 110, 110) if is_error else (160, 230, 160)
             y = _draw_wrapped_text(surface, font, message, ui_x, y, text_max_w, msg_color)
+            y += 8
+
+        # Instrucción activa
+        if instruction:
+            y = _draw_wrapped_text(surface, font, instruction, ui_x, y, text_max_w, (220, 230, 255))
     else:
         # Nivel completado: mostrar feedback
         if message:
