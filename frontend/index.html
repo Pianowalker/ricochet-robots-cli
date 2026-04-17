@@ -285,27 +285,33 @@
     .btn-subtle { background: #252535; color: #8899aa; }
 
     /* ── Tutorial ────────────────────────────────────────────────*/
+    #tutorial-panel {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #0d1b2e;
+      border: 1px solid #2a3a5a;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+
+    #tutorial-panel-feedback        { color: #88ee88; }
+    #tutorial-panel-feedback.error  { color: #ee8888; }
+    #tutorial-panel-instruction     { color: #c8d8f0; }
+
     #tutorial-controls {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 10px;
       width: 100%;
-      max-width: 576px;
+      max-width: 320px;
     }
-
-    #tutorial-message-box {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      line-height: 1.6;
-      white-space: pre-line;
-      text-align: center;
-    }
-
-    .tutorial-msg-ok    { background: #1a3a1a; color: #88ee88; border: 1px solid #2a5a2a; }
-    .tutorial-msg-error { background: #3a1a1a; color: #ee8888; border: 1px solid #5a2a2a; }
 
     /* ── Config screens ──────────────────────────────────────────*/
     #screen-game_config, #screen-practice_config {
@@ -557,6 +563,12 @@
 
   <div id="instruction-bar" style="font-size:0.95rem;color:#e0e0e0;text-align:center;min-height:1.2rem;"></div>
 
+  <!-- Tutorial panel: feedback + instruction above the board -->
+  <div id="tutorial-panel" hidden>
+    <div id="tutorial-panel-feedback" hidden></div>
+    <div id="tutorial-panel-instruction"></div>
+  </div>
+
   <div id="board"></div>
 
   <div id="controls">
@@ -602,7 +614,6 @@
 
     <!-- Tutorial-only controls -->
     <div id="tutorial-controls" hidden>
-      <div id="tutorial-message-box" hidden></div>
       <button class="action-btn btn-green" id="btn-tutorial-continue" hidden onclick="tutorialNextLevel()">Continuar</button>
       <button class="action-btn btn-subtle" id="btn-tutorial-done" hidden onclick="showHome()">Menú principal</button>
     </div>
@@ -694,6 +705,9 @@ function showHome() {
   moveCount             = 0;
   roundEverStarted      = false;
   boardSize             = 16;
+  document.getElementById('board').style.width        = '';
+  document.getElementById('tutorial-panel').hidden    = true;
+  document.getElementById('instruction-bar').hidden   = false;
   showScreen('home');
 }
 
@@ -966,8 +980,8 @@ function updateInstructionBar() {
   if (!el) return;
 
   if (currentMode === 'tutorial') {
-    el.style.whiteSpace = 'pre-line';
-    el.textContent = tutorialLevelComplete ? '' : (tutorialInfo?.instruction ?? '');
+    const instrEl = document.getElementById('tutorial-panel-instruction');
+    if (instrEl) instrEl.textContent = tutorialLevelComplete ? '' : (tutorialInfo?.instruction ?? '');
     return;
   }
 
@@ -1213,9 +1227,14 @@ async function enterTutorial() {
   document.getElementById('practice-controls').hidden = true;
   document.getElementById('game-controls').hidden     = true;
   document.getElementById('tutorial-controls').hidden = false;
-  document.getElementById('tutorial-message-box').hidden = true;
   document.getElementById('btn-tutorial-continue').hidden = true;
   document.getElementById('btn-tutorial-done').hidden     = true;
+  document.getElementById('instruction-bar').hidden = true;
+  document.getElementById('tutorial-panel').hidden  = false;
+  document.getElementById('tutorial-panel-feedback').hidden = true;
+  document.getElementById('tutorial-panel-feedback').textContent = '';
+  document.getElementById('tutorial-panel-instruction').textContent = '';
+  document.getElementById('board').style.width = 'min(calc(100vw - 24px), 320px)';
   tutorialLevelComplete = false;
   tutorialComplete      = false;
   showScreen('board');
@@ -1234,7 +1253,7 @@ async function enterTutorial() {
     clearSelection();
     updateTopBar();
   } catch (err) {
-    document.getElementById('instruction-bar').textContent = `Error: ${err.message}`;
+    document.getElementById('tutorial-panel-instruction').textContent = `Error: ${err.message}`;
   }
   updateButtons();
 }
@@ -1254,12 +1273,13 @@ async function tutorialMove(direction) {
     const data  = await res.json();
     const event = data.event;
 
-    const msgBox = document.getElementById('tutorial-message-box');
+    const fbEl   = document.getElementById('tutorial-panel-feedback');
+    const instrEl = document.getElementById('tutorial-panel-instruction');
 
     if (!event.accepted) {
-      msgBox.textContent = event.message;
-      msgBox.className   = 'tutorial-msg-error';
-      msgBox.hidden      = false;
+      fbEl.textContent = event.message;
+      fbEl.className   = 'error';
+      fbEl.hidden      = false;
     } else {
       const waypoints = event.waypoints ?? [];
       if (waypoints.length > 1) {
@@ -1269,13 +1289,14 @@ async function tutorialMove(direction) {
       tutorialInfo = data.state.tutorial;
       renderAll(state);
 
-      msgBox.textContent = event.message;
-      msgBox.style.whiteSpace = 'pre-line';
-      msgBox.className   = 'tutorial-msg-ok';
-      msgBox.hidden      = false;
+      fbEl.textContent = event.message;
+      fbEl.className   = '';
+      fbEl.hidden      = false;
 
       tutorialLevelComplete = event.level_complete;
       tutorialComplete      = event.tutorial_complete;
+
+      instrEl.textContent = tutorialLevelComplete ? '' : (tutorialInfo?.instruction ?? '');
 
       if (event.level_complete) {
         clearSelection();
@@ -1304,7 +1325,9 @@ async function tutorialNextLevel() {
     buildBoard();
     renderAll(state);
     clearSelection();
-    document.getElementById('tutorial-message-box').hidden = true;
+    const fbEl = document.getElementById('tutorial-panel-feedback');
+    fbEl.hidden = true;
+    fbEl.textContent = '';
     updateTopBar();
   } catch (err) {
     document.getElementById('instruction-bar').textContent = `Error: ${err.message}`;
