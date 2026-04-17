@@ -51,6 +51,9 @@ class TutorialSession:
 
     @property
     def current_instruction(self) -> str:
+        steps = self.current_level.steps
+        if self.current_step_index >= len(steps):
+            return ""
         return self.current_step.instruction
 
     @property

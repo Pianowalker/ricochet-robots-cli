@@ -284,6 +284,29 @@
     .btn-blue   { background: #2a3f6f; color: #88aaff; }
     .btn-subtle { background: #252535; color: #8899aa; }
 
+    /* ── Tutorial ────────────────────────────────────────────────*/
+    #tutorial-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 576px;
+    }
+
+    #tutorial-message-box {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      white-space: pre-line;
+      text-align: center;
+    }
+
+    .tutorial-msg-ok    { background: #1a3a1a; color: #88ee88; border: 1px solid #2a5a2a; }
+    .tutorial-msg-error { background: #3a1a1a; color: #ee8888; border: 1px solid #5a2a2a; }
+
     /* ── Config screens ──────────────────────────────────────────*/
     #screen-game_config, #screen-practice_config {
       display: flex;
@@ -364,6 +387,7 @@
 <div id="screen-home">
   <button class="mode-btn" id="btn-enter-practice" onclick="showScreen('practice_config')">Práctica</button>
   <button class="mode-btn" id="btn-enter-game"     onclick="showScreen('game_config')">Partida</button>
+  <button class="mode-btn" id="btn-enter-tutorial" onclick="enterTutorial()" style="background:#3a2a5a;color:#cc99ff;border:1px solid #cc99ff;">Tutorial</button>
   <button class="mode-btn" id="btn-rules"     onclick="showScreen('rules')"    style="background:#2a2a4a;color:#a0c4ff;border:1px solid #a0c4ff;">Reglas</button>
   <button class="mode-btn" id="btn-controls" onclick="showScreen('controls')" style="background:#2a2a4a;color:#a0c4ff;border:1px solid #a0c4ff;">Controles</button>
 </div>
@@ -576,6 +600,13 @@
       </div>
     </div>
 
+    <!-- Tutorial-only controls -->
+    <div id="tutorial-controls" hidden>
+      <div id="tutorial-message-box" hidden></div>
+      <button class="action-btn btn-green" id="btn-tutorial-continue" hidden onclick="tutorialNextLevel()">Continuar</button>
+      <button class="action-btn btn-subtle" id="btn-tutorial-done" hidden onclick="showHome()">Menú principal</button>
+    </div>
+
     <!-- Back to menu: always shown -->
     <button class="action-btn btn-subtle" onclick="showHome()">Menú</button>
 
@@ -613,10 +644,13 @@ let boardSize = 16;   // can be changed before calling buildBoard()
 
 // ── Shared state ─────────────────────────────────────────────
 
-let currentMode      = null;   // 'practice' | 'game'
+let currentMode      = null;   // 'practice' | 'game' | 'tutorial'
 let sessionId        = null;
 let state            = null;   // game object (state.game from API)
 let meta             = null;   // meta object (state.meta from API), game mode only
+let tutorialInfo     = null;   // { level_num, total_levels, instruction }
+let tutorialLevelComplete = false;
+let tutorialComplete      = false;
 let wallMap          = {};
 let animating        = false;
 let selectedColor    = null;
@@ -649,13 +683,17 @@ function showScreen(name) {
 }
 
 function showHome() {
-  currentMode      = null;
-  sessionId        = null;
-  state            = null;
-  meta             = null;
-  selectedColor    = null;
-  moveCount        = 0;
-  roundEverStarted = false;
+  currentMode           = null;
+  sessionId             = null;
+  state                 = null;
+  meta                  = null;
+  tutorialInfo          = null;
+  tutorialLevelComplete = false;
+  tutorialComplete      = false;
+  selectedColor         = null;
+  moveCount             = 0;
+  roundEverStarted      = false;
+  boardSize             = 16;
   showScreen('home');
 }
 
@@ -770,6 +808,7 @@ function selectRobot(color) {
   if (animating) return;
   if (currentMode === 'game' && meta && !meta.round_active) return;
   if (currentMode === 'practice' && practiceWon) return;
+  if (currentMode === 'tutorial' && tutorialLevelComplete) return;
   selectedColor = color;
 
   document.querySelectorAll('.robot').forEach(el =>
@@ -818,6 +857,19 @@ function updateLegend(robots) {
 function updateButtons() {
   // Direction buttons: base condition is robot selected and not animating
   let canMove = !!selectedColor && !animating;
+
+  if (currentMode === 'tutorial') {
+    const playing = !tutorialLevelComplete;
+    document.getElementById('selected-display').hidden = !playing;
+    document.querySelector('.dir-grid').hidden          = !playing;
+    document.getElementById('legend').hidden            = !playing;
+    canMove = canMove && playing;
+    document.getElementById('tutorial-controls').hidden           = false;
+    document.getElementById('btn-tutorial-continue').hidden = !(tutorialLevelComplete && !tutorialComplete);
+    document.getElementById('btn-tutorial-done').hidden     = !tutorialComplete;
+  } else {
+    document.getElementById('tutorial-controls').hidden = true;
+  }
 
   if (currentMode === 'practice') {
     const showMove = !practiceWon;
@@ -878,6 +930,12 @@ function updateGameInfo() {
 function updateTopBar() {
   const bar = document.getElementById('top-bar');
 
+  if (currentMode === 'tutorial' && tutorialInfo) {
+    bar.textContent = `Tutorial  ·  Nivel ${tutorialInfo.level_num} / ${tutorialInfo.total_levels}`;
+    updateInstructionBar();
+    return;
+  }
+
   if (meta?.is_game_over) {
     const score = meta.score ?? 0;
     const emoji = score > 0 ? '🎉' : score < 0 ? '❌' : '🤝';
@@ -906,6 +964,12 @@ function updateTopBar() {
 function updateInstructionBar() {
   const el = document.getElementById('instruction-bar');
   if (!el) return;
+
+  if (currentMode === 'tutorial') {
+    el.style.whiteSpace = 'pre-line';
+    el.textContent = tutorialLevelComplete ? '' : (tutorialInfo?.instruction ?? '');
+    return;
+  }
 
   if (currentMode === 'practice' && practiceWon) {
     el.textContent = `Objetivo alcanzado en ${moveCount} ${moveCount !== 1 ? 'movimientos' : 'movimiento'}. Presioná nuevo puzzle para continuar.`;
@@ -1084,6 +1148,7 @@ async function declare() {
 
 async function doMove(direction) {
   if (!selectedColor || !sessionId || animating) return;
+  if (currentMode === 'tutorial') { await tutorialMove(direction); return; }
   animating = true;
   updateButtons();
 
@@ -1139,6 +1204,112 @@ async function doMove(direction) {
     animating = false;
     updateButtons();
   }
+}
+
+// ── Tutorial mode ─────────────────────────────────────────────
+
+async function enterTutorial() {
+  currentMode = 'tutorial';
+  document.getElementById('practice-controls').hidden = true;
+  document.getElementById('game-controls').hidden     = true;
+  document.getElementById('tutorial-controls').hidden = false;
+  document.getElementById('tutorial-message-box').hidden = true;
+  document.getElementById('btn-tutorial-continue').hidden = true;
+  document.getElementById('btn-tutorial-done').hidden     = true;
+  tutorialLevelComplete = false;
+  tutorialComplete      = false;
+  showScreen('board');
+
+  try {
+    const res = await fetch(`${API}/tutorial`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    sessionId    = data.session_id;
+    state        = data.state.game;
+    tutorialInfo = data.state.tutorial;
+    boardSize    = state.board.rows;
+    wallMap      = buildWallMap(state.walls ?? []);
+    buildBoard();
+    renderAll(state);
+    clearSelection();
+    updateTopBar();
+  } catch (err) {
+    document.getElementById('instruction-bar').textContent = `Error: ${err.message}`;
+  }
+  updateButtons();
+}
+
+async function tutorialMove(direction) {
+  if (!selectedColor || !sessionId || animating) return;
+  animating = true;
+  updateButtons();
+
+  try {
+    const res = await fetch(`${API}/tutorial/${sessionId}/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color: selectedColor, direction }),
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data  = await res.json();
+    const event = data.event;
+
+    const msgBox = document.getElementById('tutorial-message-box');
+
+    if (!event.accepted) {
+      msgBox.textContent = event.message;
+      msgBox.className   = 'tutorial-msg-error';
+      msgBox.hidden      = false;
+    } else {
+      const waypoints = event.waypoints ?? [];
+      if (waypoints.length > 1) {
+        await animateWaypoints(selectedColor, waypoints);
+      }
+      state        = data.state.game;
+      tutorialInfo = data.state.tutorial;
+      renderAll(state);
+
+      msgBox.textContent = event.message;
+      msgBox.style.whiteSpace = 'pre-line';
+      msgBox.className   = 'tutorial-msg-ok';
+      msgBox.hidden      = false;
+
+      tutorialLevelComplete = event.level_complete;
+      tutorialComplete      = event.tutorial_complete;
+
+      if (event.level_complete) {
+        clearSelection();
+      }
+      updateTopBar();
+    }
+  } catch (err) {
+    document.getElementById('instruction-bar').textContent = `Error: ${err.message}`;
+  } finally {
+    animating = false;
+    updateButtons();
+  }
+}
+
+async function tutorialNextLevel() {
+  try {
+    const res = await fetch(`${API}/tutorial/${sessionId}/next`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    state        = data.state.game;
+    tutorialInfo = data.state.tutorial;
+    tutorialLevelComplete = false;
+    tutorialComplete      = false;
+    boardSize = state.board.rows;
+    wallMap   = buildWallMap(state.walls ?? []);
+    buildBoard();
+    renderAll(state);
+    clearSelection();
+    document.getElementById('tutorial-message-box').hidden = true;
+    updateTopBar();
+  } catch (err) {
+    document.getElementById('instruction-bar').textContent = `Error: ${err.message}`;
+  }
+  updateButtons();
 }
 
 // ── Swipe ─────────────────────────────────────────────────────
