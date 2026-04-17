@@ -25,14 +25,22 @@ ARROW_TO_DIRECTION = {
 }
 
 
-def pixel_to_cell(px: int, py: int, offset_x: int = 0, offset_y: int = 0) -> tuple[int, int] | None:
+def pixel_to_cell(
+    px: int,
+    py: int,
+    offset_x: int = 0,
+    offset_y: int = 0,
+    cell_size: int = CELL_SIZE,
+    board_pixel_w: int = BOARD_PIXEL_WIDTH,
+    board_pixel_h: int = BOARD_PIXEL_HEIGHT,
+) -> tuple[int, int] | None:
     """Convierte coordenadas de pantalla a (row, col). None si fuera del tablero."""
     x = px - offset_x
     y = py - offset_y
-    if not (0 <= x < BOARD_PIXEL_WIDTH and 0 <= y < BOARD_PIXEL_HEIGHT):
+    if not (0 <= x < board_pixel_w and 0 <= y < board_pixel_h):
         return None
-    col = x // CELL_SIZE
-    row = y // CELL_SIZE
+    col = x // cell_size
+    row = y // cell_size
     return (row, col)
 
 
@@ -55,6 +63,9 @@ class InputHandler:
     def __init__(self, board_offset_x: int = 0, board_offset_y: int = 0):
         self.board_offset_x = board_offset_x
         self.board_offset_y = board_offset_y
+        self.cell_size: int = CELL_SIZE
+        self.board_pixel_w: int = BOARD_PIXEL_WIDTH
+        self.board_pixel_h: int = BOARD_PIXEL_HEIGHT
         self.selected_robot_color: str | None = None
         self.pending_click_for_direction = False
         self._pending_key_robot: str | None = None
@@ -62,6 +73,12 @@ class InputHandler:
     def set_board_offset(self, x: int, y: int):
         self.board_offset_x = x
         self.board_offset_y = y
+
+    def set_cell_size(self, cell_size: int, rows: int | None = None, cols: int | None = None):
+        self.cell_size = cell_size
+        if rows is not None and cols is not None:
+            self.board_pixel_w = cols * cell_size
+            self.board_pixel_h = rows * cell_size
 
     def process_events(
         self,
@@ -95,6 +112,9 @@ class InputHandler:
                 cell = pixel_to_cell(
                     event.pos[0], event.pos[1],
                     self.board_offset_x, self.board_offset_y,
+                    cell_size=self.cell_size,
+                    board_pixel_w=self.board_pixel_w,
+                    board_pixel_h=self.board_pixel_h,
                 )
                 if cell is None:
                     # No deseleccionar: la selección se mantiene hasta elegir otro robot

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor de Puzzles — Ricochet Robots</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100dvh;
+      padding: 24px 16px 40px;
+      gap: 20px;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      letter-spacing: 2px;
+      color: #a0c4ff;
+      text-transform: uppercase;
+    }
+
+    /* ── Toolbar ── */
+    #toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      background: #16213e;
+      border: 1px solid #2a3a5a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.78rem; color: #8899bb; }
+    .field select, .field input {
+      background: #0d1b2a;
+      color: #e0e0e0;
+      border: 1px solid #2a3a5a;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+
+    button {
+      background: #2a4a8a;
+      color: #e0e0e0;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: filter 0.15s;
+      touch-action: manipulation;
+    }
+    button:hover { filter: brightness(1.2); }
+    button:disabled { opacity: 0.4; cursor: default; filter: none; }
+    button.green  { background: #1a6640; }
+    button.subtle { background: #2a2a4a; color: #a0c4ff; border: 1px solid #a0c4ff; }
+
+    /* ── Main area ── */
+    #main {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* ── Board ── */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(var(--board-size, 8), 1fr);
+      grid-template-rows:    repeat(var(--board-size, 8), 1fr);
+      width: min(calc(100vw - 32px), 480px);
+      aspect-ratio: 1;
+      border: 3px solid #8888aa;
+      background: #0d1b2a;
+      flex-shrink: 0;
+    }
+
+    .cell {
+      position: relative;
+      cursor: pointer;
+    }
+    .cell.drag-over { background: #1a3a5a !important; }
+
+    /* ── Robot tokens ── */
+    .robot {
+      position: absolute;
+      inset: 8%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: #000;
+      cursor: grab;
+      z-index: 2;
+      user-select: none;
+    }
+
+    /* ── Target marker ── */
+    .target-ring {
+      position: absolute;
+      inset: 15%;
+      border-radius: 50%;
+      border: 2px solid var(--tc, #fff);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .target-cross-h {
+      position: absolute;
+      top: 50%; left: 10%; right: 10%; height: 2px;
+      background: var(--tc, #fff);
+      transform: translateY(-50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .target-cross-v {
+      position: absolute;
+      left: 50%; top: 10%; bottom: 10%; width: 2px;
+      background: var(--tc, #fff);
+      transform: translateX(-50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .target-sym {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      z-index: 2;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    /* ── Piece tray ── */
+    #tray {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 130px;
+    }
+
+    #tray h3 { font-size: 0.85rem; color: #8899bb; letter-spacing: 1px; }
+
+    .tray-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #16213e;
+      border: 1px solid #2a3a5a;
+      border-radius: 8px;
+      cursor: grab;
+      user-select: none;
+      font-size: 0.88rem;
+    }
+    .tray-item:hover { border-color: #4466aa; }
+    .tray-item.placed { opacity: 0.4; cursor: default; }
+
+    .tray-dot {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .tray-target {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .tray-target::before, .tray-target::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+    }
+    .tray-target::before { top: 50%; left: 10%; right: 10%; height: 2px; transform: translateY(-50%); }
+    .tray-target::after  { left: 50%; top: 10%; bottom: 10%; width: 2px; transform: translateX(-50%); }
+
+    /* ── Load panel ── */
+    #load-panel {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* ── Save panel ── */
+    #save-panel {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    #status {
+      font-size: 0.85rem;
+      color: #8899bb;
+      min-height: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Editor de Puzzles</h1>
+
+<!-- Toolbar: quadrant picker -->
+<div id="toolbar">
+  <div class="field">
+    <label>Color</label>
+    <select id="sel-color">
+      <option value="green">Verde</option>
+      <option value="blue">Azul</option>
+      <option value="red">Rojo</option>
+      <option value="yellow">Amarillo</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Variante</label>
+    <select id="sel-variant">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Rotación</label>
+    <select id="sel-rotation">
+      <option value="0">0°</option>
+      <option value="1">90°</option>
+      <option value="2">180°</option>
+      <option value="3">270°</option>
+    </select>
+  </div>
+  <button onclick="loadQuadrant()">Cargar cuadrante</button>
+  <button class="subtle" onclick="clearBoard()">Limpiar piezas</button>
+</div>
+
+<!-- Board + tray -->
+<div id="main">
+  <div id="board"></div>
+
+  <div id="tray">
+    <h3>PIEZAS</h3>
+    <div class="tray-item" id="tray-red"    draggable="true" data-type="robot" data-color="red">
+      <div class="tray-dot" style="background:#ff5555"></div> Rojo
+    </div>
+    <div class="tray-item" id="tray-blue"   draggable="true" data-type="robot" data-color="blue">
+      <div class="tray-dot" style="background:#4499ff"></div> Azul
+    </div>
+    <div class="tray-item" id="tray-green"  draggable="true" data-type="robot" data-color="green">
+      <div class="tray-dot" style="background:#44dd77"></div> Verde
+    </div>
+    <div class="tray-item" id="tray-yellow" draggable="true" data-type="robot" data-color="yellow">
+      <div class="tray-dot" style="background:#ffdd33"></div> Amarillo
+    </div>
+    <div class="tray-item" id="tray-gray"   draggable="true" data-type="robot" data-color="gray">
+      <div class="tray-dot" style="background:#aaaaaa"></div> Gris
+    </div>
+    <div class="tray-item" id="tray-target" draggable="true" data-type="target">
+      <div class="tray-target"></div> Objetivo
+    </div>
+  </div>
+</div>
+
+<!-- Load panel -->
+<div id="load-panel">
+  <div class="field">
+    <label>Cargar puzzle existente</label>
+    <select id="sel-puzzle" style="min-width:180px">
+      <option value="">— elegí un puzzle —</option>
+    </select>
+  </div>
+  <button onclick="openLoadPanel()">Actualizar lista</button>
+  <button class="green" onclick="loadPuzzle()">Cargar</button>
+</div>
+
+<!-- Save panel -->
+<div id="save-panel">
+  <div class="field">
+    <label>Nombre del puzzle</label>
+    <input id="puzzle-name" type="text" placeholder="nivel_1" />
+  </div>
+  <button class="green" onclick="savePuzzle()">Guardar puzzle</button>
+</div>
+<div id="status"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+
+const ROBOT_HEX = {
+  red: '#ff5555', blue: '#4499ff',
+  green: '#44dd77', yellow: '#ffdd33',
+  gray: '#aaaaaa',
+};
+const ROBOT_LABEL = { red: 'R', blue: 'B', green: 'G', yellow: 'Y', gray: 'W' };
+const TARGET_HEX  = { red: '#ff5555', blue: '#4499ff', green: '#44dd77', yellow: '#ffdd33', gray: '#aaaaaa' };
+const BUMPER_HEX  = { red: '#ff6060', blue: '#5599ff', green: '#55dd88', yellow: '#ffe055', gray: '#bbbbbb' };
+const SYM_CHAR    = { cross: '✚', sun: '✦', planet: '⊕', moon: '☽', spiral: '⊙' };
+const SYM_NAMES   = ['cross', 'sun', 'planet', 'moon', 'spiral'];
+const SYM_LABELS  = ['Cruz', 'Sol', 'Planeta', 'Luna', 'Espiral'];
+
+const WALL_STYLE = '3px solid #c8c8d8';
+const THIN_STYLE = '1px solid #1a3050';
+
+let boardSize  = 8;
+let wallMap    = {};
+let quadrantData = null;   // raw data from backend
+let placements = {};       // { color: [r,c], ..., target: [r,c] }
+let targetColor  = null;   // color of the target piece
+let targetSymbol = null;   // symbol of the target piece
+
+// ── Board construction ────────────────────────────────────────
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  board.style.setProperty('--board-size', boardSize);
+
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
+      const div = document.createElement('div');
+      div.className = 'cell';
+      div.id = `cell-${r}-${c}`;
+      div.addEventListener('dragover',  e => { e.preventDefault(); div.classList.add('drag-over'); });
+      div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+      div.addEventListener('drop',      e => onDrop(e, r, c));
+      board.appendChild(div);
+    }
+  }
+}
+
+function buildWallMap(walls) {
+  const map = {};
+  for (const [a, b] of walls) {
+    const [r1, c1] = a, [r2, c2] = b;
+    const k1 = `${r1},${c1}`, k2 = `${r2},${c2}`;
+    if (!map[k1]) map[k1] = {};
+    if (!map[k2]) map[k2] = {};
+    const dr = r2 - r1, dc = c2 - c1;
+    if      (dr ===  1) { map[k1].bottom = true; map[k2].top    = true; }
+    else if (dr === -1) { map[k1].top    = true; map[k2].bottom = true; }
+    else if (dc ===  1) { map[k1].right  = true; map[k2].left   = true; }
+    else                { map[k1].left   = true; map[k2].right  = true; }
+  }
+  return map;
+}
+
+function renderWalls() {
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
+      const cell = document.getElementById(`cell-${r}-${c}`);
+      const w = wallMap[`${r},${c}`] ?? {};
+      cell.style.cssText = [
+        `border-top:${   w.top    ? WALL_STYLE : THIN_STYLE}`,
+        `border-bottom:${w.bottom ? WALL_STYLE : THIN_STYLE}`,
+        `border-left:${  w.left   ? WALL_STYLE : THIN_STYLE}`,
+        `border-right:${ w.right  ? WALL_STYLE : THIN_STYLE}`,
+        'background:#0d1b2a',
+      ].join(';');
+    }
+  }
+}
+
+function renderBumpers(bumpers) {
+  for (const b of bumpers) {
+    const [r, c] = b.position;
+    const cell   = document.getElementById(`cell-${r}-${c}`);
+    const stroke = BUMPER_HEX[b.color] ?? '#aaaaaa';
+    const [x1, y1, x2, y2] = b.diagonal === '/' ? [5, 95, 95, 5] : [5, 5, 95, 95];
+    cell.insertAdjacentHTML('beforeend',
+      `<svg viewBox="0 0 100 100" preserveAspectRatio="none"
+            style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1">
+        <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+              stroke="${stroke}" stroke-width="12" stroke-linecap="round"/>
+      </svg>`);
+  }
+}
+
+// ── Load quadrant from backend ────────────────────────────────
+
+async function loadQuadrant() {
+  const color    = document.getElementById('sel-color').value;
+  const variant  = document.getElementById('sel-variant').value;
+  const rotation = document.getElementById('sel-rotation').value;
+
+  setStatus('Cargando...');
+  try {
+    const res = await fetch(`${API}/editor/quadrant/${color}/${variant}?rotation=${rotation}`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    quadrantData = await res.json();
+
+    boardSize = quadrantData.board_size;
+    wallMap   = buildWallMap(quadrantData.walls);
+    placements   = {};
+    targetColor  = null;
+    targetSymbol = null;
+    updateTray();
+
+    buildBoard();
+    renderWalls();
+    renderBumpers(quadrantData.bumpers);
+    setStatus(`Cuadrante ${color} v${variant} cargado.`);
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+}
+
+// ── Drag & drop ───────────────────────────────────────────────
+
+let dragging = null;  // { type: 'robot'|'target', color?: string }
+
+document.querySelectorAll('.tray-item').forEach(item => {
+  item.addEventListener('dragstart', e => {
+    if (item.classList.contains('placed')) { e.preventDefault(); return; }
+    dragging = { type: item.dataset.type, color: item.dataset.color };
+  });
+});
+
+function onDrop(e, r, c) {
+  e.preventDefault();
+  document.getElementById(`cell-${r}-${c}`).classList.remove('drag-over');
+  if (!dragging || !quadrantData) return;
+
+  if (dragging.type === 'robot') {
+    placeRobot(dragging.color, r, c);
+  } else {
+    placeTarget(r, c);
+  }
+  dragging = null;
+}
+
+// ── Place pieces ──────────────────────────────────────────────
+
+function placeRobot(color, r, c) {
+  // Remove from previous cell if already placed
+  if (placements[color]) {
+    const [pr, pc] = placements[color];
+    const prev = document.getElementById(`cell-${pr}-${pc}`);
+    prev.querySelector(`.robot[data-color="${color}"]`)?.remove();
+  }
+
+  placements[color] = [r, c];
+  const cell = document.getElementById(`cell-${r}-${c}`);
+
+  // Remove any other robot of same color already there
+  cell.querySelector(`.robot[data-color="${color}"]`)?.remove();
+
+  const div = document.createElement('div');
+  div.className = 'robot';
+  div.dataset.color = color;
+  div.style.background = ROBOT_HEX[color];
+  div.textContent = ROBOT_LABEL[color];
+  div.draggable = true;
+  div.addEventListener('dragstart', () => {
+    dragging = { type: 'robot', color };
+  });
+  cell.appendChild(div);
+  updateTray();
+}
+
+function renderTargetAt(r, c, color, symbol) {
+  const hex     = TARGET_HEX[color] ?? '#ffffff';
+  const symChar = SYM_CHAR[symbol]  ?? '?';
+  const cell    = document.getElementById(`cell-${r}-${c}`);
+  cell.querySelectorAll('.target-ring,.target-cross-h,.target-cross-v,.target-sym')
+      .forEach(el => el.remove());
+  cell.insertAdjacentHTML('beforeend',
+    `<div class="target-ring" style="--tc:${hex}"></div>
+     <span class="target-sym" style="color:${hex}">${symChar}</span>`);
+}
+
+function placeTarget(r, c) {
+  // Ask for target color
+  const colors      = ['red', 'blue', 'green', 'yellow', 'gray', 'wildcard'];
+  const colorLabels = ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Gris', 'Comodín'];
+  const colorChoice = prompt(
+    'Color del objetivo:\n' +
+    colors.map((col, i) => `${i + 1}. ${colorLabels[i]}`).join('\n') +
+    '\n\nIngresá el número:'
+  );
+  const colorIdx = parseInt(colorChoice, 10) - 1;
+  if (isNaN(colorIdx) || colorIdx < 0 || colorIdx >= colors.length) return;
+  targetColor = colors[colorIdx] === 'wildcard' ? null : colors[colorIdx];
+
+  // Ask for symbol
+  const symChoice = prompt(
+    'Símbolo del objetivo:\n' +
+    SYM_NAMES.map((s, i) => `${i + 1}. ${SYM_LABELS[i]}`).join('\n') +
+    '\n\nIngresá el número:'
+  );
+  const symIdx = parseInt(symChoice, 10) - 1;
+  if (isNaN(symIdx) || symIdx < 0 || symIdx >= SYM_NAMES.length) return;
+  targetSymbol = SYM_NAMES[symIdx];
+
+  // Remove from previous cell if already placed
+  if (placements.target) {
+    const [pr, pc] = placements.target;
+    renderTargetAt(pr, pc, null, null);   // clears visuals
+    document.getElementById(`cell-${pr}-${pc}`)
+      .querySelectorAll('.target-ring,.target-sym').forEach(el => el.remove());
+  }
+
+  placements.target = [r, c];
+  renderTargetAt(r, c, targetColor, targetSymbol);
+  updateTray();
+}
+
+// ── Tray state ────────────────────────────────────────────────
+
+function updateTray() {
+  ['red','blue','green','yellow','gray'].forEach(color => {
+    const item = document.getElementById(`tray-${color}`);
+    item.classList.toggle('placed', color in placements);
+    item.draggable = !(color in placements);
+  });
+  const tgt = document.getElementById('tray-target');
+  tgt.classList.toggle('placed', 'target' in placements);
+  tgt.draggable = !('target' in placements);
+}
+
+document.getElementById('tray-target').addEventListener('dragstart', e => {
+  if (document.getElementById('tray-target').classList.contains('placed')) {
+    e.preventDefault(); return;
+  }
+  dragging = { type: 'target' };
+});
+
+// ── Clear ─────────────────────────────────────────────────────
+
+function clearBoard() {
+  placements   = {};
+  targetColor  = null;
+  targetSymbol = null;
+  if (!quadrantData) return;
+  buildBoard();
+  renderWalls();
+  renderBumpers(quadrantData.bumpers);
+  updateTray();
+  setStatus('Piezas removidas.');
+}
+
+// ── Save ──────────────────────────────────────────────────────
+
+async function savePuzzle() {
+  if (!quadrantData) { setStatus('Primero cargá un cuadrante.'); return; }
+
+  const name = document.getElementById('puzzle-name').value.trim();
+  if (!name) { setStatus('Ingresá un nombre para el puzzle.'); return; }
+
+  if (!placements.target) { setStatus('Colocá el objetivo en el tablero.'); return; }
+
+  const robots = {};
+  for (const [color, pos] of Object.entries(placements)) {
+    if (color !== 'target') robots[color] = pos;
+  }
+
+  if (Object.keys(robots).length === 0) {
+    setStatus('Colocá al menos un robot.'); return;
+  }
+
+  const body = {
+    name,
+    board_size: boardSize,
+    walls:      quadrantData.walls,
+    bumpers:    quadrantData.bumpers,
+    robots,
+    target: {
+      color:    targetColor,
+      symbol:   targetSymbol,
+      position: placements.target,
+    },
+  };
+
+  setStatus('Guardando...');
+  try {
+    const res = await fetch(`${API}/editor/puzzle`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const data = await res.json();
+    setStatus(`✓ Guardado como "${data.name}.json"`);
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+}
+
+// ── Load existing puzzle ──────────────────────────────────────
+
+async function openLoadPanel() {
+  setStatus('Actualizando lista...');
+  try {
+    const res = await fetch(`${API}/editor/puzzles`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const names = await res.json();
+
+    const sel = document.getElementById('sel-puzzle');
+    sel.innerHTML = '<option value="">— elegí un puzzle —</option>';
+    for (const name of names) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = name;
+      sel.appendChild(opt);
+    }
+    setStatus(names.length ? `${names.length} puzzle(s) disponibles.` : 'No hay puzzles guardados.');
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+}
+
+async function loadPuzzle() {
+  const name = document.getElementById('sel-puzzle').value;
+  if (!name) { setStatus('Elegí un puzzle de la lista.'); return; }
+
+  setStatus('Cargando puzzle...');
+  try {
+    const res = await fetch(`${API}/editor/puzzle/${encodeURIComponent(name)}`);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    const data = await res.json();
+
+    // Restore board state
+    boardSize    = data.board_size;
+    wallMap      = buildWallMap(data.walls);
+    quadrantData = { board_size: data.board_size, walls: data.walls, bumpers: data.bumpers };
+    placements   = {};
+    targetColor  = null;
+    targetSymbol = null;
+
+    buildBoard();
+    renderWalls();
+    renderBumpers(data.bumpers);
+
+    // Place robots
+    for (const [color, pos] of Object.entries(data.robots ?? {})) {
+      placeRobot(color, pos[0], pos[1]);
+    }
+
+    // Place target
+    if (data.target?.position) {
+      targetColor  = data.target.color  ?? null;
+      targetSymbol = data.target.symbol ?? null;
+      const [r, c] = data.target.position;
+      renderTargetAt(r, c, targetColor, targetSymbol);
+      placements.target = [r, c];
+    }
+
+    // Restore puzzle name in save field
+    document.getElementById('puzzle-name').value = name;
+
+    updateTray();
+    setStatus(`Puzzle "${name}" cargado.`);
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+// Init
+buildBoard();
+openLoadPanel();
+</script>
+</body>
+</html>

@@ -7,6 +7,8 @@ import pygame
 from ricochet.domain.game import Game
 from ricochet.domain.sessions.single_player_session import SinglePlayerSession
 from ricochet.domain.sessions.practice_session import PracticeSession
+from ricochet.domain.sessions.tutorial_session import TutorialSession
+from ricochet.domain.sessions.tutorial_content import TUTORIAL_LEVELS
 from ricochet.domain.maps import build_random_board
 
 from .renderer import (
@@ -35,6 +37,10 @@ GAME_END = "game_end"
 RULES = "rules"
 CONTROLS = "controls"
 PRACTICE = "practice"
+TUTORIAL = "tutorial"
+
+# Tamaño de celda para los puzzles del tutorial (8x8 → 800x800)
+TUTORIAL_CELL_SIZE = 100
 
 # Modos para build_random_board
 MODE_MAP = {
@@ -67,6 +73,10 @@ class GameWindow:
         self._is_practice_mode: bool = False
         self.practice_message: str = ""
         self.easy_mode: bool = False
+        self.tutorial_session: TutorialSession | None = None
+        self.tutorial_message: str = ""
+        self.tutorial_level_complete: bool = False
+        self.tutorial_complete: bool = False
 
     def _start_game(self):
         """Crea Game y Session según el modo elegido."""
@@ -104,13 +114,33 @@ class GameWindow:
         self.practice_message = ""
         self.input_handler.clear_selection()
 
+    def _start_tutorial(self):
+        """Crea una TutorialSession y arranca el primer nivel."""
+        self.tutorial_session = TutorialSession(TUTORIAL_LEVELS)
+        self.game = self.tutorial_session.game
+        self.session = None
+        self.practice_session = None
+        self.tutorial_message = ""
+        self.tutorial_level_complete = False
+        self.tutorial_complete = False
+        self.active_animation = None
+        self.state = TUTORIAL
+        cs = TUTORIAL_CELL_SIZE
+        self.input_handler.clear_selection()
+        self.input_handler.set_cell_size(cs, self.game.height, self.game.width)
+
     def _abandon_to_menu(self):
         """Abandona la partida o práctica activa y vuelve al menú."""
         self.session = None
         self.practice_session = None
+        self.tutorial_session = None
         self.practice_message = ""
+        self.tutorial_message = ""
+        self.tutorial_level_complete = False
+        self.tutorial_complete = False
         self.active_animation = None
         self.input_handler.clear_selection()
+        self.input_handler.set_cell_size(CELL_SIZE)
         self.state = MENU
 
     def _get_target_text(self) -> str:
@@ -130,7 +160,7 @@ class GameWindow:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 if self.state in (RULES, CONTROLS, GAME_MODE_SELECT):
                     self.state = MENU
-                elif self.state in (PLAYING, PRACTICE, ROUND_END):
+                elif self.state in (PLAYING, PRACTICE, ROUND_END, TUTORIAL):
                     if self.declaring_moves:
                         self.declaring_moves = False
                     else:
@@ -146,6 +176,9 @@ class GameWindow:
                         return False
                     if bid == ui.BTN_PLAY:
                         self.state = GAME_MODE_SELECT
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    if bid == ui.BTN_TUTORIAL:
+                        self._start_tutorial()
                         sounds.play(sounds.SOUND_BUTTON_CLICK)
                     if bid == ui.BTN_RULES:
                         self.state = RULES
@@ -302,6 +335,53 @@ class GameWindow:
                         sounds.play(sounds.SOUND_BUTTON_CLICK)
                     elif bid == ui.BTN_ABANDON:
                         self._abandon_to_menu()
+
+        elif self.state == TUTORIAL and self.tutorial_session and self.game:
+            actions = self.input_handler.process_events(events, self.game.robots)
+            for action in actions:
+                if action[0] == "move" and len(action) == 3:
+                    _, color, direction = action
+                    if self.tutorial_level_complete or self.active_animation:
+                        continue
+                    from_pos = self.game.robots[color].position
+                    result = self.tutorial_session.move(color, direction)
+                    if not result.accepted:
+                        self.tutorial_message = result.message
+                        sounds.play(sounds.SOUND_BUMPER_HIT)
+                    else:
+                        to_pos = result.position
+                        if from_pos != to_pos:
+                            self.active_animation = RobotAnimation(
+                                color, from_pos, to_pos, result.waypoints,
+                                cell_size=TUTORIAL_CELL_SIZE,
+                            )
+                            sounds.play(sounds.SOUND_ROBOT_MOVE)
+                        self.tutorial_message = result.message
+                        self.tutorial_level_complete = result.level_complete
+                        self.tutorial_complete = result.tutorial_complete
+                        if result.level_complete:
+                            sounds.play(sounds.SOUND_WIN_ROUND)
+            for e in events:
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    bid = ui.get_button_at(self.buttons, e.pos)
+                    if bid == ui.BTN_TUTORIAL_CONTINUE and self.tutorial_level_complete and not self.tutorial_complete:
+                        self.tutorial_session.advance_level()
+                        self.game = self.tutorial_session.game
+                        self.tutorial_message = ""
+                        self.tutorial_level_complete = False
+                        self.tutorial_complete = False
+                        self.active_animation = None
+                        self.input_handler.clear_selection()
+                        self.input_handler.set_cell_size(
+                            TUTORIAL_CELL_SIZE, self.game.height, self.game.width
+                        )
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_TUTORIAL_MENU and self.tutorial_complete:
+                        self._abandon_to_menu()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
+                    elif bid == ui.BTN_ABANDON:
+                        self._abandon_to_menu()
+                        sounds.play(sounds.SOUND_BUTTON_CLICK)
 
         elif self.state == ROUND_END:
             for e in events:
@@ -527,6 +607,48 @@ class GameWindow:
                 msg = self.font.render(self.practice_message, True, (120, 240, 120))
                 msg_r = msg.get_rect(centerx=panel_x + panel_w // 2, centery=panel_y + panel_h // 2)
                 self.screen.blit(msg, msg_r)
+
+        elif self.state == TUTORIAL and self.tutorial_session and self.game:
+            cs = TUTORIAL_CELL_SIZE
+            board_w = self.game.width * cs
+            board_h = self.game.height * cs
+            board_offset_x = 0
+            board_offset_y = (self.screen.get_height() - board_h) // 2
+            self.board_offset_x = board_offset_x
+            self.board_offset_y = board_offset_y
+            self.input_handler.set_board_offset(board_offset_x, board_offset_y)
+            draw_board(
+                self.screen, board_offset_x, board_offset_y,
+                rows=self.game.height, cols=self.game.width, cell_size=cs,
+            )
+            draw_walls(self.screen, self.game.walls, board_offset_x, board_offset_y, cell_size=cs)
+            draw_targets(
+                self.screen, self.game.targets, self.game.active_target,
+                board_offset_x, board_offset_y, cell_size=cs,
+            )
+            draw_bumpers(self.screen, self.game.bumpers, board_offset_x, board_offset_y, cell_size=cs)
+            robot_pixel_override = None
+            if self.active_animation:
+                px, py = self.active_animation.get_current_pixel_position()
+                robot_pixel_override = {self.active_animation.color: (px, py)}
+            draw_robots(
+                self.screen, self.game.robots,
+                board_offset_x, board_offset_y,
+                robot_pixel_override=robot_pixel_override,
+                selected_color=self.input_handler.get_selected_robot(),
+                cell_size=cs,
+            )
+            ui_x = board_offset_x + board_w + 20
+            self.buttons = ui.draw_tutorial_panel(
+                self.screen, self.font, mouse_pos,
+                ui_x=ui_x, ui_y=20,
+                level_num=self.tutorial_session.level_number,
+                total_levels=self.tutorial_session.total_levels,
+                instruction=self.tutorial_session.current_instruction if not self.tutorial_level_complete else "",
+                message=self.tutorial_message,
+                level_complete=self.tutorial_level_complete,
+                tutorial_complete=self.tutorial_complete,
+            )
 
         elif self.state == GAME_END and self.session:
             title = self.font.render("Partida terminada", True, (240, 240, 250))

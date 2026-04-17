@@ -22,6 +22,9 @@ BTN_NEXT_PUZZLE = "next_puzzle"
 BTN_RESET_PUZZLE = "reset_puzzle"
 BTN_TOGGLE_EASY = "toggle_easy"
 BTN_ABANDON = "abandon"
+BTN_TUTORIAL = "tutorial"
+BTN_TUTORIAL_CONTINUE = "tutorial_continue"
+BTN_TUTORIAL_MENU = "tutorial_menu"
 
 # Colores
 COLOR_BTN = (80, 90, 120)
@@ -61,6 +64,7 @@ def draw_menu_buttons(
     buttons = {}
     labels = [
         (BTN_PLAY, "Jugar"),
+        (BTN_TUTORIAL, "Tutorial"),
         (BTN_CONTROLS, "Controles"),
         (BTN_RULES, "Reglas"),
         (BTN_EXIT, "Salir"),
@@ -253,6 +257,111 @@ def draw_controls_screen(surface: pygame.Surface, font: pygame.font.Font, mouse_
     rect = pygame.Rect(surface.get_width() // 2 - 70, y + 24, 140, 40)
     draw_button(surface, font, "Volver", rect, rect.collidepoint(mouse_pos))
     return {BTN_BACK: rect}
+
+
+def _draw_wrapped_text(
+    surface: pygame.Surface,
+    font: pygame.font.Font,
+    text: str,
+    x: int,
+    y: int,
+    max_width: int,
+    color: tuple,
+) -> int:
+    """Dibuja texto con word-wrap respetando \\n. Devuelve el y final."""
+    line_h = font.get_height() + 4
+    for paragraph in text.split("\n"):
+        if paragraph == "":
+            y += line_h // 2
+            continue
+        words = paragraph.split(" ")
+        line = ""
+        for word in words:
+            test = (line + " " + word).strip()
+            if font.size(test)[0] <= max_width:
+                line = test
+            else:
+                if line:
+                    surface.blit(font.render(line, True, color), (x, y))
+                    y += line_h
+                line = word
+        if line:
+            surface.blit(font.render(line, True, color), (x, y))
+            y += line_h
+    return y
+
+
+def draw_tutorial_panel(
+    surface: pygame.Surface,
+    font: pygame.font.Font,
+    mouse_pos: tuple[int, int],
+    ui_x: int,
+    ui_y: int,
+    level_num: int,
+    total_levels: int,
+    instruction: str,
+    message: str,
+    level_complete: bool,
+    tutorial_complete: bool,
+) -> dict[str, pygame.Rect]:
+    """Panel lateral del tutorial: nivel, instrucción, feedback y botones."""
+    buttons = {}
+    panel_w = surface.get_width() - ui_x - 10
+    text_max_w = panel_w - 4
+
+    y = ui_y
+
+    # Indicador de nivel
+    level_surf = font.render(f"Nivel {level_num} / {total_levels}", True, (200, 200, 220))
+    surface.blit(level_surf, (ui_x, y))
+    y += level_surf.get_height() + 6
+
+    # Separador
+    pygame.draw.line(surface, (80, 85, 110), (ui_x, y), (ui_x + panel_w, y), 1)
+    y += 10
+
+    if not level_complete:
+        # Feedback o error tras un movimiento (va primero para leerse antes)
+        if message:
+            is_error = "incorrecto" in message.lower()
+            msg_color = (255, 110, 110) if is_error else (160, 230, 160)
+            y = _draw_wrapped_text(surface, font, message, ui_x, y, text_max_w, msg_color)
+            y += 8
+
+        # Instrucción activa
+        if instruction:
+            y = _draw_wrapped_text(surface, font, instruction, ui_x, y, text_max_w, (220, 230, 255))
+    else:
+        # Nivel completado: mostrar feedback
+        if message:
+            y = _draw_wrapped_text(surface, font, message, ui_x, y, text_max_w, (160, 230, 160))
+            y += 16
+
+        # Botón Continuar o Menú principal
+        btn_rect = pygame.Rect(ui_x, y, panel_w, 38)
+        if tutorial_complete:
+            buttons[BTN_TUTORIAL_MENU] = btn_rect
+            draw_button(surface, font, "Menu principal", btn_rect, btn_rect.collidepoint(mouse_pos))
+        else:
+            buttons[BTN_TUTORIAL_CONTINUE] = btn_rect
+            draw_button(surface, font, "Continuar", btn_rect, btn_rect.collidepoint(mouse_pos))
+
+    # Botón Abandonar anclado al fondo del panel
+    y_abandon = surface.get_height() - 56
+    rect_abandon = pygame.Rect(ui_x, y_abandon, panel_w, 36)
+    buttons[BTN_ABANDON] = rect_abandon
+    hover_abandon = rect_abandon.collidepoint(mouse_pos)
+    pygame.draw.rect(
+        surface,
+        (130, 50, 50) if hover_abandon else (100, 40, 40),
+        rect_abandon,
+        border_radius=6,
+    )
+    pygame.draw.rect(surface, (180, 80, 80), rect_abandon, 2, border_radius=6)
+    txt = font.render("Abandonar", True, (240, 200, 200))
+    surface.blit(txt, (rect_abandon.centerx - txt.get_width() // 2, rect_abandon.centery - txt.get_height() // 2))
+
+    return buttons
 
 
 def get_button_at(buttons: dict[str, pygame.Rect], pos: tuple[int, int]) -> str | None:
