@@ -68,6 +68,17 @@ python -m http.server 3000
 ```
 Luego abrí `http://localhost:3000` en el navegador.
 
+### Probar desde el celular (misma red Wi-Fi)
+
+1. Averiguá la IP local de la PC (`ipconfig` en Windows → buscá "Dirección IPv4", suele ser `192.168.x.x`).
+2. Arrancá el backend escuchando en todas las interfaces:
+   ```bash
+   uvicorn ricochet.backend.app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+3. Arrancá el frontend igual que siempre (`python -m http.server 3000`).
+4. Permití el puerto 8000 entrante en el firewall de Windows si te lo pide.
+5. En el celular, entrá a `http://<IP-de-la-PC>:3000`. El frontend detecta automáticamente la IP local y manda los requests al backend de la PC.
+
 **Editor de puzzles** (herramienta interna, requiere backend corriendo):
 ```
 http://localhost:3000/editor.html
