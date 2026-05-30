@@ -122,6 +122,11 @@
       border-color: rgba(122,162,255,0.35);
       color: var(--accent);
     }
+    #btn-enter-challenge {
+      background: linear-gradient(135deg, rgba(251,191,36,0.20), rgba(251,191,36,0.05));
+      border-color: rgba(251,191,36,0.35);
+      color: var(--warn);
+    }
     #btn-enter-tutorial {
       background: linear-gradient(135deg, rgba(179,155,255,0.18), rgba(179,155,255,0.05)) !important;
       border-color: rgba(179,155,255,0.35) !important;
@@ -480,8 +485,50 @@
       max-width: 340px;
     }
 
+    /* ── Challenge styling ──────────────────────────────────────*/
+    .btn-warn {
+      background: linear-gradient(135deg, rgba(251,191,36,0.22), rgba(251,191,36,0.06));
+      border-color: rgba(251,191,36,0.40);
+      color: var(--warn);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, rgba(248,113,113,0.18), rgba(248,113,113,0.05));
+      border-color: rgba(248,113,113,0.35);
+      color: var(--error);
+    }
+    #challenge-rules {
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    #challenge-rules strong.title {
+      color: var(--warn);
+      display: block;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    #challenge-rules ul { padding-left: 1.2em; }
+
+    #challenge-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    #top-bar .time-pill {
+      color: var(--warn);
+      border-color: rgba(251,191,36,0.35);
+    }
+    #top-bar .time-pill.low { color: var(--error); border-color: rgba(248,113,113,0.45); }
+
     /* ── Config screens ──────────────────────────────────────────*/
-    #screen-game_config, #screen-practice_config {
+    #screen-game_config, #screen-practice_config, #screen-challenge_config,
+    #screen-challenge_end, #screen-scores {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -490,6 +537,24 @@
       width: 100%;
       max-width: 340px;
     }
+
+    #screen-scores { max-width: 420px; }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 36px 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.9rem;
+    }
+    .score-row:last-child { border-bottom: none; }
+    .score-row .rank   { color: var(--text-mute); font-variant-numeric: tabular-nums; }
+    .score-row .name   { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .score-row .points { color: var(--warn); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .score-row .date   { color: var(--text-mute); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+    .score-row.empty   { color: var(--text-mute); text-align: center; display:block; padding: 18px; border: none; }
 
     .config-form {
       display: flex;
@@ -609,9 +674,11 @@
 <div id="screen-home">
   <button class="mode-btn" id="btn-enter-practice" onclick="showScreen('practice_config')">Práctica</button>
   <button class="mode-btn" id="btn-enter-game"     onclick="showScreen('game_config')">Partida</button>
+  <button class="mode-btn" id="btn-enter-challenge" onclick="showScreen('challenge_config')">Desafío</button>
   <button class="mode-btn" id="btn-enter-tutorial" onclick="enterTutorial()">Tutorial</button>
   <button class="mode-btn" id="btn-rules"     onclick="showScreen('rules')">Reglas</button>
   <button class="mode-btn" id="btn-controls" onclick="showScreen('controls')">Controles</button>
+  <button class="mode-btn" id="btn-scores" onclick="loadAndShowScores()">Ver puntajes</button>
   <button class="mode-btn" id="btn-mute" onclick="toggleMute()" aria-pressed="false">🔊 Sonido</button>
 </div>
 
@@ -665,6 +732,39 @@
   <div class="config-buttons">
     <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
     <button class="action-btn btn-green"  onclick="enterPractice()">Iniciar práctica</button>
+  </div>
+</div>
+
+<!-- ── Challenge config screen ─────────────────────────────── -->
+<div id="screen-challenge_config" hidden>
+  <h2>Configurar desafío</h2>
+  <div class="config-form">
+    <label class="config-label">
+      Modo de mapa
+      <select id="cfg-challenge-map" class="config-input">
+        <option value="random">Aleatorio</option>
+        <option value="no_bumpers">Sin rebotadores</option>
+        <option value="at_least_one_bumper">Con rebotadores</option>
+      </select>
+    </label>
+    <label class="config-label config-toggle">
+      Modo fácil
+      <input id="cfg-challenge-easy" type="checkbox" />
+    </label>
+  </div>
+  <div id="challenge-rules">
+    <strong class="title">Reglas del desafío</strong>
+    <ul>
+      <li>Tenés <strong>5 minutos</strong> para resolver la mayor cantidad de puzzles posibles.</li>
+      <li>Cada puzzle resuelto suma puntos: <strong>100 − 5 por movimiento</strong> (mínimo 25).</li>
+      <li>Si lo resolvés en <strong>7 movimientos o menos</strong>, ganás un bonus de <strong>+50</strong>.</li>
+      <li>Podés cambiar el puzzle actual, pero te descuenta <strong>40 puntos</strong>.</li>
+      <li>Cuando se acabe el tiempo se muestra el puntaje final.</li>
+    </ul>
+  </div>
+  <div class="config-buttons">
+    <button class="action-btn btn-subtle" onclick="showScreen('home')">Volver</button>
+    <button class="action-btn btn-warn"   onclick="enterChallenge()">Iniciar desafío</button>
   </div>
 </div>
 
@@ -770,6 +870,45 @@
   </div>
 </div>
 
+<!-- ── Challenge end screen ───────────────────────────────── -->
+<div id="screen-challenge_end" hidden>
+  <h2 style="text-align:center;">¡Desafío terminado!</h2>
+  <div class="config-form" style="align-items:center;text-align:center;gap:18px;">
+    <div id="challenge-end-score" style="font-size:1.6rem;font-weight:700;color:var(--warn);letter-spacing:1px;"></div>
+
+    <div id="challenge-end-prompt" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+      <p style="color:var(--text-dim);">¿Querés registrar tu puntaje?</p>
+      <div class="config-buttons">
+        <button class="action-btn btn-subtle" onclick="showHome()">No, ir al menú</button>
+        <button class="action-btn btn-warn"   onclick="showScoreRegister()">Sí, registrar</button>
+      </div>
+    </div>
+
+    <div id="challenge-end-register" hidden style="display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;">
+      <label class="config-label" style="flex-direction:column;align-items:stretch;gap:6px;width:100%;">
+        <span>Tu nombre (máx. 20 caracteres)</span>
+        <input id="score-name-input" type="text" maxlength="20" class="config-input" enterkeyhint="go" />
+      </label>
+      <div id="score-register-feedback" style="color:var(--error);font-size:0.85rem;min-height:1em;"></div>
+      <div class="config-buttons">
+        <button class="action-btn btn-subtle" onclick="showHome()">Cancelar</button>
+        <button class="action-btn btn-warn"   id="btn-submit-score" onclick="submitScore()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Scores screen ──────────────────────────────────────── -->
+<div id="screen-scores" hidden>
+  <h2 style="text-align:center;">Ranking</h2>
+  <div id="scores-list" style="width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);padding:8px;">
+    <div style="padding:14px;text-align:center;color:var(--text-dim);">Cargando…</div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:16px;">
+    <button class="action-btn btn-subtle" onclick="showHome()">Volver al menú</button>
+  </div>
+</div>
+
 <!-- ── Board screen (shared between modes) ────────────────── -->
 <div id="screen-board" hidden>
 
@@ -804,6 +943,11 @@
       <button class="action-btn btn-green" id="btn-new" onclick="newPuzzle()">Nuevo puzzle</button>
     </div>
 
+    <!-- Challenge-only controls -->
+    <div id="challenge-controls" hidden>
+      <button class="action-btn btn-danger" id="btn-skip-challenge" hidden onclick="skipChallengePuzzle()">Cambiar puzzle (−40)</button>
+    </div>
+
     <!-- Game-only controls -->
     <div id="game-controls" hidden>
       <div id="round-status" hidden style="font-size:0.9rem;color:#aabbcc;text-align:center;"></div>
@@ -830,10 +974,15 @@
 </div>
 
 <script>
-const API =
-  window.location.hostname === "localhost"
-    ? "http://127.0.0.1:8000"
-    : "https://ricochet-backend-xhi3.onrender.com";
+const API = (() => {
+  const h = window.location.hostname;
+  if (h === "localhost" || h === "127.0.0.1") return "http://127.0.0.1:8000";
+  // Local network access (PC IP on Wi-Fi, etc.) → use the same host for the backend
+  if (/^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[0-1])\./.test(h)) {
+    return `http://${h}:8000`;
+  }
+  return "https://ricochet-backend-xhi3.onrender.com";
+})();
 
 const ROBOT_HEX = {
   red: '#cc2828', blue: '#1a55c0',
@@ -873,6 +1022,13 @@ let selectedColor    = null;
 let moveCount        = 0;
 let roundEverStarted = false;  // true once first startRound() succeeds
 let practiceWon      = false;  // true after winning in practice, until new puzzle
+
+// ── Challenge state ──────────────────────────────────────────
+let challengeStarted       = false;
+let challengeFinished      = false;
+let challengeTimerId       = null;
+let challengeBaseRemaining = 0;   // remaining_time (s) at last server sync
+let challengeBaseTimestamp = 0;   // Date.now() at last server sync
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -1031,6 +1187,7 @@ function renderArrows() {
   if (currentMode === 'practice' && practiceWon) return;
   if (currentMode === 'tutorial' && tutorialLevelComplete) return;
   if (currentMode === 'game' && meta && (!meta.round_active || meta.declared_moves == null)) return;
+  if (currentMode === 'challenge' && (!challengeStarted || challengeFinished)) return;
 
   const [r, c] = state.robots[selectedColor];
   const cellPct = 100 / boardSize;
@@ -1095,7 +1252,7 @@ function classifyMove(waypoints, direction) {
 
 // ── Screen management ─────────────────────────────────────────
 
-const SCREENS = ['home', 'game_config', 'practice_config', 'board', 'rules', 'controls'];
+const SCREENS = ['home', 'game_config', 'practice_config', 'challenge_config', 'board', 'rules', 'controls', 'challenge_end', 'scores'];
 
 function showScreen(name) {
   SCREENS.forEach(s =>
@@ -1103,6 +1260,7 @@ function showScreen(name) {
 }
 
 function showHome() {
+  stopChallengeTimer();
   currentMode           = null;
   sessionId             = null;
   state                 = null;
@@ -1113,6 +1271,8 @@ function showHome() {
   selectedColor         = null;
   moveCount             = 0;
   roundEverStarted      = false;
+  challengeStarted      = false;
+  challengeFinished     = false;
   boardSize             = 16;
   document.getElementById('board').style.width        = '';
   document.getElementById('tutorial-panel').hidden    = true;
@@ -1264,6 +1424,7 @@ function selectRobot(color) {
   if (currentMode === 'game' && meta && !meta.round_active) return;
   if (currentMode === 'practice' && practiceWon) return;
   if (currentMode === 'tutorial' && tutorialLevelComplete) return;
+  if (currentMode === 'challenge' && (!challengeStarted || challengeFinished)) return;
   selectedColor = color;
   Sound.select();
 
@@ -1331,6 +1492,13 @@ function updateButtons() {
     document.getElementById('legend').hidden            = !showMove;
   }
 
+  if (currentMode === 'challenge') {
+    const playing = challengeStarted && !challengeFinished;
+    document.getElementById('btn-skip-challenge').hidden  = !playing;
+    document.getElementById('selected-display').hidden    = !playing;
+    document.getElementById('legend').hidden              = !playing;
+  }
+
   if (currentMode === 'game' && meta) {
     const roundActive   = !!meta.round_active;
     const declared      = meta.declared_moves !== null;
@@ -1385,6 +1553,32 @@ function updateTopBar() {
     return;
   }
 
+  if (currentMode === 'challenge') {
+    const score = meta?.score ?? 0;
+    if (challengeFinished) {
+      setTopBar([`🏁 Desafío terminado`, `Puntaje final: ${score}`]);
+      updateInstructionBar();
+      return;
+    }
+    const remaining = getDisplayedRemaining();
+    const bar = document.getElementById('top-bar');
+    bar.innerHTML = '';
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'time-pill' + (remaining <= 30 && challengeStarted ? ' low' : '');
+    timeSpan.textContent = `⏱️ ${formatTime(remaining)}`;
+    bar.appendChild(timeSpan);
+    const scoreSpan = document.createElement('span');
+    scoreSpan.textContent = `Puntaje: ${score}`;
+    bar.appendChild(scoreSpan);
+    if (challengeStarted && meta?.move_count != null) {
+      const movesSpan = document.createElement('span');
+      movesSpan.textContent = `Movimientos: ${meta.move_count}`;
+      bar.appendChild(movesSpan);
+    }
+    updateInstructionBar();
+    return;
+  }
+
   if (meta?.is_game_over) {
     const score = meta.score ?? 0;
     const emoji = score > 0 ? '🎉' : score < 0 ? '❌' : '🤝';
@@ -1423,6 +1617,11 @@ function updateInstructionBar() {
   if (currentMode === 'practice' && practiceWon) {
     el.textContent = `Objetivo alcanzado en ${moveCount} ${moveCount !== 1 ? 'movimientos' : 'movimiento'}. Presioná nuevo puzzle para continuar.`;
     return;
+  }
+
+  if (currentMode === 'challenge') {
+    if (challengeFinished) { el.textContent = '¡Se acabó el tiempo!'; return; }
+    // fall through to target message
   }
 
   if (currentMode === 'game' && meta && !meta.round_active && roundEverStarted && !meta.is_game_over) {
@@ -1466,8 +1665,9 @@ async function animateWaypoints(color, waypoints) {
 
 async function enterPractice() {
   currentMode = 'practice';
-  document.getElementById('practice-controls').hidden = false;
-  document.getElementById('game-controls').hidden     = true;
+  document.getElementById('practice-controls').hidden  = false;
+  document.getElementById('game-controls').hidden      = true;
+  document.getElementById('challenge-controls').hidden = true;
   showScreen('board');
   await newPuzzle();
 }
@@ -1511,8 +1711,9 @@ async function newPuzzle() {
 
 async function enterGame() {
   currentMode = 'game';
-  document.getElementById('practice-controls').hidden = true;
-  document.getElementById('game-controls').hidden     = false;
+  document.getElementById('practice-controls').hidden  = true;
+  document.getElementById('game-controls').hidden      = false;
+  document.getElementById('challenge-controls').hidden = true;
   showScreen('board');
 
   try {
@@ -1601,8 +1802,16 @@ async function doMove(direction) {
   clearArrows();
   updateButtons();
 
+  if (currentMode === 'challenge' && (challengeFinished || !challengeStarted)) {
+    animating = false;
+    updateButtons();
+    return;
+  }
+
   const url = currentMode === 'practice'
     ? `${API}/practice/${sessionId}/move`
+    : currentMode === 'challenge'
+    ? `${API}/challenge/${sessionId}/move`
     : `${API}/game/${sessionId}/move`;
 
   try {
@@ -1633,9 +1842,9 @@ async function doMove(direction) {
       moveCount++;
       setMoveCount(moveCount);
 
-      if (currentMode === 'game') {
+      if (currentMode === 'game' || currentMode === 'challenge') {
         meta = data.state.meta;
-        updateGameInfo();
+        if (currentMode === 'challenge') syncChallengeTime(meta);
       }
 
       renderAll(state);
@@ -1646,6 +1855,12 @@ async function doMove(direction) {
           updateTopBar();
         } else if (currentMode === 'game') {
           setMessage(event.message || `¡Ronda completada! Puntaje: ${meta.score}`);
+        } else if (currentMode === 'challenge') {
+          // server auto-loaded next puzzle; just refresh UI
+          updateTopBar();
+          if (!challengeFinished) {
+            setMessage(`+${event.earned_points ?? 0} pts · próximo puzzle`);
+          }
         } else {
           practiceWon = true;
           updateTopBar();
@@ -1653,6 +1868,7 @@ async function doMove(direction) {
         clearSelection();
       } else {
         setMessage(event.message || 'Elegí una dirección');
+        if (currentMode === 'challenge') updateTopBar();
       }
     }
   } catch (err) {
@@ -1663,13 +1879,225 @@ async function doMove(direction) {
   }
 }
 
+// ── Challenge mode ────────────────────────────────────────────
+
+function formatTime(secs) {
+  const s = Math.max(0, Math.floor(secs));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r.toString().padStart(2, '0')}`;
+}
+
+function getDisplayedRemaining() {
+  if (!challengeStarted) return challengeBaseRemaining;
+  const elapsed = (Date.now() - challengeBaseTimestamp) / 1000;
+  return Math.max(0, challengeBaseRemaining - elapsed);
+}
+
+function syncChallengeTime(metaObj) {
+  if (!metaObj) return;
+  if (metaObj.remaining_time != null) {
+    challengeBaseRemaining = metaObj.remaining_time;
+    challengeBaseTimestamp = Date.now();
+  }
+  if (metaObj.is_game_over && !challengeFinished) {
+    finishChallenge();
+  }
+}
+
+function startChallengeTimer() {
+  stopChallengeTimer();
+  challengeTimerId = setInterval(() => {
+    if (challengeFinished) { stopChallengeTimer(); return; }
+    const remaining = getDisplayedRemaining();
+    if (remaining <= 0) {
+      finishChallenge();
+    } else {
+      updateTopBar();
+    }
+  }, 1000);
+}
+
+function stopChallengeTimer() {
+  if (challengeTimerId !== null) {
+    clearInterval(challengeTimerId);
+    challengeTimerId = null;
+  }
+}
+
+function finishChallenge() {
+  if (challengeFinished) return;
+  challengeFinished = true;
+  stopChallengeTimer();
+  clearSelection();
+  clearArrows();
+  updateTopBar();
+  updateButtons();
+  showChallengeEnd();
+}
+
+function showChallengeEnd() {
+  const finalScore = meta?.score ?? 0;
+  document.getElementById('challenge-end-score').textContent = `Puntaje: ${finalScore}`;
+  document.getElementById('challenge-end-prompt').hidden   = false;
+  document.getElementById('challenge-end-register').hidden = true;
+  document.getElementById('score-name-input').value = '';
+  document.getElementById('score-register-feedback').textContent = '';
+  showScreen('challenge_end');
+}
+
+function showScoreRegister() {
+  document.getElementById('challenge-end-prompt').hidden   = true;
+  document.getElementById('challenge-end-register').hidden = false;
+  const input = document.getElementById('score-name-input');
+  input.focus();
+}
+
+async function submitScore() {
+  const input = document.getElementById('score-name-input');
+  const feedback = document.getElementById('score-register-feedback');
+  const btn = document.getElementById('btn-submit-score');
+  const name = (input.value || '').trim();
+  if (!name) {
+    feedback.textContent = 'Escribí un nombre para registrar tu puntaje.';
+    return;
+  }
+  const finalScore = meta?.score ?? 0;
+  feedback.textContent = '';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/scores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.slice(0, 20), score: finalScore })
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    await loadAndShowScores();
+  } catch (err) {
+    feedback.textContent = `Error al guardar: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadAndShowScores() {
+  const listEl = document.getElementById('scores-list');
+  listEl.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text-dim);">Cargando…</div>';
+  showScreen('scores');
+  try {
+    const res = await fetch(`${API}/scores`);
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    renderScores(data);
+  } catch (err) {
+    listEl.innerHTML = `<div class="score-row empty">Error: ${err.message}</div>`;
+  }
+}
+
+function renderScores(rows) {
+  const listEl = document.getElementById('scores-list');
+  listEl.innerHTML = '';
+  if (!rows || rows.length === 0) {
+    listEl.innerHTML = '<div class="score-row empty">Todavía no hay puntajes registrados.</div>';
+    return;
+  }
+  rows.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    const date = formatScoreDate(r.played_at);
+    row.innerHTML =
+      `<span class="rank">#${i + 1}</span>` +
+      `<span class="name"></span>` +
+      `<span class="points">${r.score}</span>` +
+      `<span class="date">${date}</span>`;
+    row.querySelector('.name').textContent = r.name;
+    listEl.appendChild(row);
+  });
+}
+
+function formatScoreDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+async function enterChallenge() {
+  currentMode = 'challenge';
+  challengeStarted       = false;
+  challengeFinished      = false;
+  challengeBaseRemaining = 300;
+  challengeBaseTimestamp = Date.now();
+  stopChallengeTimer();
+  document.getElementById('practice-controls').hidden  = true;
+  document.getElementById('game-controls').hidden      = true;
+  document.getElementById('challenge-controls').hidden = false;
+  showScreen('board');
+
+  try {
+    const body = {
+      mode:       document.getElementById('cfg-challenge-map').value,
+      difficulty: document.getElementById('cfg-challenge-easy').checked ? 'easy' : 'normal',
+    };
+    const res = await fetch(`${API}/challenge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    sessionId = data.session_id;
+    state     = data.state.game;
+    meta      = data.state.meta;
+    challengeStarted = true;
+    syncChallengeTime(meta);
+    wallMap   = buildWallMap(state.walls ?? []);
+    buildBoard();
+    renderAll(state);
+    startChallengeTimer();
+    updateTopBar();
+  } catch (err) {
+    setMessage(`Error: ${err.message}`, 'illegal');
+  }
+  updateButtons();
+}
+
+async function skipChallengePuzzle() {
+  if (!sessionId || animating) return;
+  if (!challengeStarted || challengeFinished) return;
+  const btn = document.getElementById('btn-skip-challenge');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/challenge/${sessionId}/skip`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    state = data.state.game;
+    meta  = data.state.meta;
+    syncChallengeTime(meta);
+    renderAll(state);
+    clearSelection();
+    const penalty = data.event?.penalty ?? 0;
+    setMessage(penalty > 0 ? `Puzzle salteado (−${penalty})` : 'Puzzle salteado');
+    updateTopBar();
+  } catch (err) {
+    setMessage(`Error: ${err.message}`, 'illegal');
+  } finally {
+    btn.disabled = false;
+    updateButtons();
+  }
+}
+
 // ── Tutorial mode ─────────────────────────────────────────────
 
 async function enterTutorial() {
   currentMode = 'tutorial';
-  document.getElementById('practice-controls').hidden = true;
-  document.getElementById('game-controls').hidden     = true;
-  document.getElementById('tutorial-controls').hidden = false;
+  document.getElementById('practice-controls').hidden  = true;
+  document.getElementById('game-controls').hidden      = true;
+  document.getElementById('challenge-controls').hidden = true;
+  document.getElementById('tutorial-controls').hidden  = false;
   document.getElementById('btn-tutorial-continue').hidden = true;
   document.getElementById('btn-tutorial-done').hidden     = true;
   document.getElementById('instruction-bar').hidden = true;
@@ -1858,7 +2286,13 @@ document.getElementById('declare-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); declare(); }
 });
 
+document.getElementById('score-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); submitScore(); }
+});
+
 document.addEventListener('keydown', e => {
+  const tag = e.target?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   if (e.key in KEY_DIR) {
     e.preventDefault();
     doMove(KEY_DIR[e.key]);
