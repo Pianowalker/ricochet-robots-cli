@@ -10,6 +10,7 @@ def serialize_game(game):
         },
         "target": {
             "color": game.active_target.color,
+            "symbol": game.active_target.symbol,
             "position": list(game.active_target.position),
         } if game.active_target else None,
         "walls": [
